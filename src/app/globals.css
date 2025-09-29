@@ -20,7 +20,10 @@
 }
 
 body {
-  background: var(--background);
+  background: url(/sample-bg.png) no-repeat center center;
+  background-size: cover;
+  background-attachment: fixed;
+  min-height: 100vh;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
