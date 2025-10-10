@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "station": "渋谷駅",
+        "sound": "/sounds/yamanoteline.mp3",
+        "hint_1": "ここはヒント1です。",
+        "answers": [
+            "山手線",
+            "副都心線",
+            "井の頭線",
+            "半蔵門線"
+        ],
+        "correct_answer": "山手線",
+        "scores": [3, 7, 12, 15, 20]
+    }
+]
