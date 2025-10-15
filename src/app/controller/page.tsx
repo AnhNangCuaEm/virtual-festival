@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import Header from '@/components/layout/Header';
+import MuteBtn from '@/components/ui/MuteBtn';
+import Link from 'next/link';
 
 interface Player {
   id: string;
@@ -23,13 +26,12 @@ export default function ControllerPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [playerName, setPlayerName] = useState('');
-  
+
   // Joystick state
   const [joystickPosition, setJoystickPosition] = useState<JoystickPosition>({ x: 0, y: 0, distance: 0, angle: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const joystickRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
 
   // Initialize socket connection
   useEffect(() => {
@@ -83,14 +85,14 @@ export default function ControllerPage() {
       // Send continuous movement data with constant speed
       const normalizedX = Math.cos(position.angle * Math.PI / 180);
       const normalizedY = Math.sin(position.angle * Math.PI / 180);
-      
-      const vectorData = { 
-        x: normalizedX, 
+
+      const vectorData = {
+        x: normalizedX,
         y: normalizedY,
         angle: position.angle,
         speed: 1 // Constant speed instead of distance-based
       };
-      
+
       socket.emit('moveVector', vectorData);
     } else if (socket && isConnected && position.distance <= 0.1) {
       // Stop movement when joystick is released
@@ -101,14 +103,14 @@ export default function ControllerPage() {
   // Continuous movement while joystick is held
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    
+
     if (isDragging && joystickPosition.distance > 0.1) {
       // Send movement every 16ms (~60fps) while joystick is held
       intervalId = setInterval(() => {
         sendMovement(joystickPosition);
       }, 16);
     }
-    
+
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
@@ -119,25 +121,25 @@ export default function ControllerPage() {
   // Calculate joystick position
   const calculateJoystickPosition = useCallback((clientX: number, clientY: number): JoystickPosition => {
     if (!joystickRef.current) return { x: 0, y: 0, distance: 0, angle: 0 };
-    
+
     const rect = joystickRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     const deltaX = clientX - centerX;
     const deltaY = clientY - centerY;
-    
+
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     const maxDistance = rect.width / 2 - 20; // Leave some margin
-    
+
     const limitedDistance = Math.min(distance, maxDistance);
     const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-    
+
     const normalizedDistance = limitedDistance / maxDistance;
-    
+
     const limitedX = (deltaX / distance) * limitedDistance;
     const limitedY = (deltaY / distance) * limitedDistance;
-    
+
     return {
       x: isNaN(limitedX) ? 0 : limitedX,
       y: isNaN(limitedY) ? 0 : limitedY,
@@ -157,7 +159,7 @@ export default function ControllerPage() {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
-    
+
     const position = calculateJoystickPosition(e.clientX, e.clientY);
     setJoystickPosition(position);
     // Send movement immediately when position changes
@@ -187,7 +189,7 @@ export default function ControllerPage() {
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging) return;
     e.preventDefault();
-    
+
     const touch = e.touches[0];
     const position = calculateJoystickPosition(touch.clientX, touch.clientY);
     setJoystickPosition(position);
@@ -230,81 +232,72 @@ export default function ControllerPage() {
   }, [socket, isConnected, playerName, currentPlayer]);
 
   return (
-    <div className="page-container">
-      <h1 className="page-title">🕹️ Festival Controller</h1>
-      <p className="page-description">
-        Use the joystick to move your avatar around the festival venue.
-        Drag the knob in any direction for 360° movement.
-      </p>
+    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+      <Header />
+      {/* Back and mute button */}
+      <div className="w-full h-16 flex items-center justify-between px-8">
+        <Link href="/controller">
+          <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+            Back
+          </button>
+        </Link>
+        <MuteBtn />
+      </div>
 
-      {/* Connection Status */}
-      <div className="controller-info">
-        <div className="status-indicator">
-          <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}></div>
-          {isConnected ? '🟢 Connected to Festival' : '🔴 Connecting...'}
+      {/* Main content */}
+      <main className="flex flex-col items-center justify-center w-full flex-1 px-6 text-center">
+      {/* Banner space */}
+      <div className="banner">
+        <h2>Welcome to the Joystick Controller</h2>
+        <p>Use the joystick to control your avatar in the virtual festival!</p>
+      </div>
+
+        {/* Real Joystick */}
+        <div className="controller-container">
+          <div className="joystick-wrapper">
+            <div
+              ref={joystickRef}
+              className="joystick-base"
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <div
+                ref={knobRef}
+                className="joystick-knob"
+                style={{
+                  transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+                  backgroundColor: isDragging ? '#ff4444' : '#ff6666'
+                }}
+              >
+              </div>
+            </div>
+          </div>
+
         </div>
-        
+      </main>
+      {/* Connection Status */}
+      <div className="text-center mb-4">
         {currentPlayer && (
           <div style={{ marginTop: '1rem' }}>
             <p><strong>Your Avatar:</strong></p>
             <div className="player-item">
               <span>{currentPlayer.name}</span>
-              <div 
-                className="player-color" 
+              <div
+                className="player-color"
                 style={{ backgroundColor: currentPlayer.color }}
               ></div>
             </div>
             <p><small>Position: ({Math.round(currentPlayer.x)}, {Math.round(currentPlayer.y)})</small></p>
           </div>
         )}
-      </div>
-
-      {/* Real Joystick */}
-      <div className="controller-container">
-        <h3>🎮 360° Joystick</h3>
-        
-        <div className="joystick-wrapper">
-          <div 
-            ref={joystickRef}
-            className="joystick-base"
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-          >
-            <div 
-              ref={knobRef}
-              className="joystick-knob"
-              style={{
-                transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                backgroundColor: isDragging ? '#ff4444' : '#ff6666'
-              }}
-            >
-              🎯
-            </div>
-          </div>
-        </div>
-        
-        <div className="joystick-info">
-          <p><strong>Distance:</strong> {Math.round(joystickPosition.distance * 100)}%</p>
-          <p><strong>Angle:</strong> {Math.round(joystickPosition.angle)}°</p>
-        </div>
-
-        <div className="controller-info" style={{ marginTop: '2rem' }}>
-          <h4>📱 How to Use</h4>
-          <p>• Drag the red knob in any direction</p>
-          <p>• 360° movement support</p>
-          <p>• Your movement will be visible on the venue map</p>
-          <p>• Other players can see you moving in real-time</p>
+        <div className="status-indicator">
+          <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}></div>
+          {isConnected ? '🟢 Connected to Festival' : '🔴 Connecting...'}
         </div>
       </div>
 
+      {/* joystick style */}
       <style jsx>{`
-        .connection-status.connected {
-          background: #10b981;
-        }
-        .connection-status.disconnected {
-          background: #ef4444;
-        }
-        
         .joystick-wrapper {
           display: flex;
           justify-content: center;
