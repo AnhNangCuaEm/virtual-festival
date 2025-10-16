@@ -241,8 +241,8 @@ export default function Page() {
                         <div className="w-full h-60 p-4 bg-gradient-to-r bg-gray-200/80 rounded-2xl overflow-hidden relative">
                             <Image
                                 src={`/images/zone_2/zone_2_bg.jpg`}
+                                layout="fill"
                                 alt="Question Image"
-                                fill
                                 className="object-cover absolute inset-0 blur-xs"
                                 priority
                             />
