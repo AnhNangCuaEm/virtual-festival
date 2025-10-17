@@ -24,7 +24,7 @@ export default function Page() {
   const [QData, setQData] = useState<Question[]>([]);
   const [currentState, setCurrentState] = useState<StateType>("start");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [miniTimer, setMiniTimer] = useState(25);
+  const [miniTimer, setMiniTimer] = useState(30);
   const [totalTimer, setTotalTimer] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -41,8 +41,7 @@ export default function Page() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const shuffled = [...quizData].sort(() => Math.random() - 0.5);
-    setQData(shuffled);
+    setQData(quizData);
   }, []);
 
   const playAudio = useCallback(() => {
@@ -73,6 +72,7 @@ export default function Page() {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current = null;
       setIsPlaying(false);
     }
   }, []);
@@ -121,7 +121,7 @@ export default function Page() {
 
     if (currentQuestionIndex < QData.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
-      setMiniTimer(25);
+      setMiniTimer(30);
       setSelectedAnswer(null);
       setIsAnswered(false);
       setHasPlayedAudio(false);
@@ -143,7 +143,7 @@ export default function Page() {
     setTimeout(() => {
       isProcessingTimeout.current = false;
       moveToNextQuestion();
-    }, 2500);
+    }, 2200);
   }, [moveToNextQuestion]);
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function Page() {
         setMiniTimer((prev) => {
           if (prev <= 1) {
             handleTimeout();
-            return 25;
+            return 30;
           }
           return prev - 1;
         });
@@ -216,7 +216,7 @@ export default function Page() {
   const startQuiz = () => {
     setCurrentState("quiz");
     setCurrentQuestionIndex(0);
-    setMiniTimer(25);
+    setMiniTimer(30);
     setTotalTimer(0);
     setTotalScore(0);
     setSelectedAnswer(null);
@@ -265,7 +265,7 @@ export default function Page() {
                 <br />
                 {QData.length}問のクイズです。
                 <br />
-                各問題は25秒以内に答えてください。
+                各問題は30秒以内に答えてください。
                 <br />
                 早く答えるほど高得点！
               </p>
