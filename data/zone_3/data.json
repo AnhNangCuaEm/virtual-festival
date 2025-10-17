@@ -2,7 +2,7 @@
   {
     "id": 1,
     "station": "新宿駅",
-    "sound": "./sounds/chuoline.m4a",
+    "sound": "/sounds/chuoline.m4a",
     "hint_1": "この線は東西に走る主要路線です。",
     "answers": ["中央線", "山手線", "丸ノ内線", "銀座線"],
     "correct_answer": "中央線",
@@ -11,7 +11,7 @@
   {
     "id": 2,
     "station": "東京駅",
-    "sound": "./sounds/keihintohokuline.m4a",
+    "sound": "/sounds/keihintohokuline.m4a",
     "hint_1": "北と南を結ぶ緑色の線です。",
     "answers": ["京浜東北線", "常磐線", "千代田線", "東西線"],
     "correct_answer": "京浜東北線",
@@ -20,7 +20,7 @@
   {
     "id": 3,
     "station": "新宿駅",
-    "sound": "./sounds/yamanoteline.m4a",
+    "sound": "/sounds/yamanoteline.m4a",
     "hint_1": "東京の環状線で緑色です。",
     "answers": ["山手線", "新宿線", "浅草線", "三田線"],
     "correct_answer": "山手線",
@@ -29,7 +29,7 @@
   {
     "id": 4,
     "station": "新宿駅",
-    "sound": "./sounds/marunouchiline.m4a",
+    "sound": "/sounds/marunouchiline.m4a",
     "hint_1": "赤い線で都心を循環します。",
     "answers": ["丸ノ内線", "中央線", "銀座線", "京葉線"],
     "correct_answer": "丸ノ内線",
@@ -38,7 +38,7 @@
   {
     "id": 5,
     "station": "新宿駅",
-    "sound": "./sounds/shinjukuline.m4a",
+    "sound": "/sounds/shinjukuline.m4a",
     "hint_1": "新宿から西武線に直通します。",
     "answers": ["新宿線", "山手線", "常磐線", "浅草線"],
     "correct_answer": "新宿線",
@@ -47,7 +47,7 @@
   {
     "id": 6,
     "station": "渋谷駅",
-    "sound": "./sounds/ginzaline.m4a",
+    "sound": "/sounds/ginzaline.m4a",
     "hint_1": "東京で最も古い地下鉄線です。",
     "answers": ["銀座線", "丸ノ内線", "千代田線", "半蔵門線"],
     "correct_answer": "銀座線",
@@ -56,7 +56,7 @@
   {
     "id": 7,
     "station": "東京駅",
-    "sound": "./sounds/jobanline.m4a",
+    "sound": "/sounds/jobanline.m4a",
     "hint_1": "上野から北東へ向かう線です。",
     "answers": ["常磐線", "京浜東北線", "中央線", "三田線"],
     "correct_answer": "常磐線",
@@ -65,7 +65,7 @@
   {
     "id": 8,
     "station": "大手町駅",
-    "sound": "./sounds/chiyodaline.m4a",
+    "sound": "/sounds/chiyodaline.m4a",
     "hint_1": "緑色の地下鉄で霞ヶ関を通ります。",
     "answers": ["千代田線", "銀座線", "東西線", "浅草線"],
     "correct_answer": "千代田線",
@@ -74,7 +74,7 @@
   {
     "id": 9,
     "station": "中野駅",
-    "sound": "./sounds/tozailine.m4a",
+    "sound": "/sounds/tozailine.m4a",
     "hint_1": "東西を結ぶオレンジ色の線です。",
     "answers": ["東西線", "中央線", "新宿線", "中野線"],
     "correct_answer": "東西線",
@@ -83,7 +83,7 @@
   {
     "id": 10,
     "station": "渋谷駅",
-    "sound": "./sounds/hanzomonline.m4a",
+    "sound": "/sounds/hanzomonline.m4a",
     "hint_1": "紫色の線で大手町まで直通します。",
     "answers": ["半蔵門線", "銀座線", "丸ノ内線", "京葉線"],
     "correct_answer": "半蔵門線",
