@@ -232,7 +232,7 @@ export default function ControllerPage() {
   }, [socket, isConnected, playerName, currentPlayer]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
       <Header />
       {/* Back and mute button */}
       <div className="w-full h-16 flex items-center justify-between px-8">

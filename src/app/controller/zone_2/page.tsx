@@ -41,7 +41,7 @@ export default function Page() {
     }, []);
 
     const moveToNextQuestion = useCallback(() => {
-        
+
         // Check if we should move to next question or end quiz
         if (currentQuestionIndex < QData.length - 1) {
             // Still have more questions, move to next
@@ -67,13 +67,13 @@ export default function Page() {
         if (isProcessingTimeout.current) {
             return;
         }
-        
+
         isProcessingTimeout.current = true;
-        
+
         // When timeout, show correct answer briefly then move to next (no points added)
         setIsAnswered(true);
         // Don't set selectedAnswer - this marks it as a timeout
-        
+
         // Wait 1.5 seconds before moving to next question (same as when answering)
         setTimeout(() => {
             isProcessingTimeout.current = false; // Reset flag
@@ -83,7 +83,7 @@ export default function Page() {
 
     // Mini timer countdown (15 seconds per question)
     useEffect(() => {
-        
+
         if (currentState === "quiz" && !isAnswered) {
             miniTimerRef.current = setInterval(() => {
                 setMiniTimer(prev => {
@@ -357,7 +357,7 @@ export default function Page() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen py-2">
+        <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
             <Header />
             {/* Back and mute button */}
             <div className="w-full h-16 flex items-center justify-between px-8">

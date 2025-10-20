@@ -341,7 +341,7 @@ export default function Page() {
                     title="最初から再生"
                   >
                     <Image
-                      src="/refresh-svgrepo-com.svg"
+                      src="/images/zone_3/refresh-svgrepo-com.svg"
                       alt="Refresh"
                       width={24}
                       height={24}
@@ -356,14 +356,14 @@ export default function Page() {
                     >
                       {isPlaying ? (
                         <Image
-                          src="/pause-circle-svgrepo-com.svg"
+                          src="/images/zone_3/pause-circle-svgrepo-com.svg"
                           alt="Pause"
                           width={64}
                           height={64}
                         />
                       ) : (
                         <Image
-                          src="/play-svgrepo-com.svg"
+                          src="/images/zone_3/play-svgrepo-com.svg"
                           alt="Play"
                           width={64}
                           height={64}
@@ -482,7 +482,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-8">
         <Link href="/controller">
