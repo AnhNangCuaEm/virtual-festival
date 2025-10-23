@@ -18,6 +18,13 @@ interface Question {
   scores: number[];
 }
 
+interface QuestionResult {
+  questionNumber: number;
+  userAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+}
+
 type StateType = "start" | "quiz" | "result";
 
 export default function Page() {
@@ -32,6 +39,7 @@ export default function Page() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
   const [hasStartedGame, setHasStartedGame] = useState(false);
+  const [quizResults, setQuizResults] = useState<QuestionResult[]>([]);
 
   const volume = 0.8;
 
@@ -140,11 +148,20 @@ export default function Page() {
     isProcessingTimeout.current = true;
     setIsAnswered(true);
 
+    const currentQuestion = QData[currentQuestionIndex];
+    const result: QuestionResult = {
+      questionNumber: currentQuestionIndex + 1,
+      userAnswer: null,
+      correctAnswer: currentQuestion.correct_answer,
+      isCorrect: false,
+    };
+    setQuizResults((prev) => [...prev, result]);
+
     setTimeout(() => {
       isProcessingTimeout.current = false;
       moveToNextQuestion();
-    }, 2200);
-  }, [moveToNextQuestion]);
+    }, 1700);
+  }, [moveToNextQuestion, QData, currentQuestionIndex]);
 
   useEffect(() => {
     if (currentState === "quiz" && !isAnswered && hasPlayedAudio) {
@@ -208,9 +225,17 @@ export default function Page() {
       setTotalScore((prev) => prev + score);
     }
 
+    const result: QuestionResult = {
+      questionNumber: currentQuestionIndex + 1,
+      userAnswer: answer,
+      correctAnswer: currentQuestion.correct_answer,
+      isCorrect: isCorrect,
+    };
+    setQuizResults((prev) => [...prev, result]);
+
     setTimeout(() => {
       moveToNextQuestion();
-    }, 3000);
+    }, 1700);
   };
 
   const startQuiz = () => {
@@ -223,6 +248,7 @@ export default function Page() {
     setIsAnswered(false);
     setHasPlayedAudio(false);
     setHasStartedGame(false);
+    setQuizResults([]);
   };
 
   const restartQuiz = () => {
@@ -387,7 +413,13 @@ export default function Page() {
                   "p-6 border-2 rounded-lg font-semibold transition-all ";
 
                 if (!showResult) {
-                  buttonClass += "border-gray-300 hover:border-violet-500";
+                  if (hasPlayedAudio) {
+                    buttonClass +=
+                      "border-gray-300 hover:border-violet-500 cursor-pointer";
+                  } else {
+                    buttonClass +=
+                      "border-gray-300 opacity-50 cursor-not-allowed";
+                  }
                 } else if (isTimeout) {
                   if (isCorrect) {
                     buttonClass += "border-green-500 text-green-700";
@@ -439,33 +471,62 @@ export default function Page() {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="flex flex-col items-center space-y-6"
+            className="flex flex-col items-center space-y-6 w-full max-w-3xl"
           >
-            <h1 className="text-4xl font-bold">結果</h1>
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="w-full max-w-2xl p-8 bg-gray-200/80 rounded-2xl flex flex-col items-center justify-center space-y-4"
+              className="w-full p-8 bg-purple-300/60 rounded-2xl flex flex-col items-center justify-center space-y-4"
             >
-              <p className="text-6xl font-bold text-purple-600">
+              <h1 className="text-4xl font-bold text-black">Congratulation</h1>
+              <p className="text-xl text-black font-bold">
+                Finished in{" "}
+                <span className="text-red-500 font-bold">
+                  {formatTime(totalTimer)}
+                </span>
+                s
+              </p>
+              <p className="text-6xl font-bold text-green-500">
                 {totalScore}
-                <span className="text-2xl text-black">点</span>
+                <span className="text-2xl text-black"> Points</span>
               </p>
-              <p className="text-xl text-black">
-                所要時間: {formatTime(totalTimer)}
-              </p>
-              <p className="text-lg text-black">
-                {totalScore >= 150
-                  ? "素晴らしい！駅メロマスターです！"
-                  : totalScore >= 100
-                  ? "よくできました！"
-                  : totalScore >= 50
-                  ? "もう少し頑張りましょう！"
-                  : totalScore > 0
-                  ? "次回はもっと頑張りましょう！"
-                  : "残念！次はもっと速く答えてみましょう！"}
-              </p>
+
+              <div className="w-full mt-6">
+                <h2 className="text-3xl font-bold text-center mb-4">Result</h2>
+                <div className="bg-purple-200/60 rounded-xl p-6">
+                  <div className="grid grid-cols-2 gap-4 border-b-2 border-black pb-2 mb-4">
+                    <div className="text-center font-bold text-black">
+                      あなたの選択
+                    </div>
+                    <div className="text-center font-bold text-black">正解</div>
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {quizResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-2 gap-4 text-center"
+                      >
+                        <div className="text-black">
+                          問{result.questionNumber}.{" "}
+                          <span
+                            className={
+                              result.isCorrect
+                                ? "text-green-600 font-bold"
+                                : "text-red-600 font-bold"
+                            }
+                          >
+                            {result.userAnswer || "~~線"}
+                          </span>
+                        </div>
+                        <div className="text-green-600 font-bold border-l-2 border-black">
+                          {result.correctAnswer}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </motion.div>
             <button
               onClick={restartQuiz}
