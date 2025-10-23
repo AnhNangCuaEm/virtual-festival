@@ -495,19 +495,17 @@ export default function Page() {
               <div className="w-full mt-6">
                 <h2 className="text-3xl font-bold text-center mb-4">Result</h2>
                 <div className="bg-purple-200/60 rounded-xl p-6">
-                  <div className="grid grid-cols-2 gap-4 border-b-2 border-black pb-2 mb-4">
+                  <div className="grid grid-cols-2 gap-4 pb-2">
                     <div className="text-center font-bold text-black">
                       あなたの選択
                     </div>
                     <div className="text-center font-bold text-black">正解</div>
                   </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {quizResults.map((result, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-2 gap-4 text-center"
-                      >
-                        <div className="text-black">
+                  <div className="border-b-2 border-black mb-4"></div>
+                  <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                    <div className="space-y-2">
+                      {quizResults.map((result, index) => (
+                        <div key={index} className="text-center text-black">
                           問{result.questionNumber}.{" "}
                           <span
                             className={
@@ -519,11 +517,18 @@ export default function Page() {
                             {result.userAnswer || "~~線"}
                           </span>
                         </div>
-                        <div className="text-green-600 font-bold border-l-2 border-black">
+                      ))}
+                    </div>
+                    <div className="space-y-2 border-l-2 border-black pl-4">
+                      {quizResults.map((result, index) => (
+                        <div
+                          key={index}
+                          className="text-center text-green-600 font-bold"
+                        >
                           {result.correctAnswer}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
