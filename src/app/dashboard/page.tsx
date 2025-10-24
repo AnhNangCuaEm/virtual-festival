@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
@@ -13,14 +14,25 @@ interface Player {
   connectedAt: string;
 }
 
+interface GameRanking {
+  title: string;
+  players: Array<{ name: string; points: number }>;
+}
+
 export default function DashboardPage() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [players, setPlayers] = useState<Record<string, Player>>({});
-  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [gameRankings, setGameRankings] = useState<GameRanking[]>([
+    { title: '山手線クイズ', players: [] },
+    { title: '東京電車アナウンス', players: [] },
+    { title: '富士山パズル', players: [] },
+    { title: '鹿せんべいチャレンジ', players: [] },
+    { title: '納豆混ぜゲーム', players: [] },
+  ]);
+  const galleryImages = Array.from({ length: 8 }, (_, i) => `/images/zone_1/${i + 1}.jpg`);
 
   useEffect(() => {
-    // Get the current host and construct server URL
     const getServerUrl = () => {
       if (typeof window !== 'undefined') {
         const hostname = window.location.hostname;
@@ -32,245 +44,161 @@ export default function DashboardPage() {
     };
 
     const serverUrl = getServerUrl();
-
-    const newSocket = io(serverUrl, {
-      transports: ['websocket']
-    });
+    const newSocket = io(serverUrl, { transports: ['websocket'] });
 
     newSocket.on('connect', () => {
       console.log('Dashboard connected to server');
       setIsConnected(true);
-      // Tell server this is a dashboard viewer
       newSocket.emit('setRole', 'viewer');
     });
 
     newSocket.on('disconnect', () => {
-      console.log('Dashboard disconnected from server');
       setIsConnected(false);
     });
 
     newSocket.on('players', (playersData: Record<string, Player>) => {
       setPlayers(playersData);
-      setLastUpdate(new Date().toLocaleTimeString());
-    });
-
-    newSocket.on('playerRemoved', (data: { playerId: string, playerName: string }) => {
-      console.log(`Player ${data.playerName} removed successfully`);
+      updateRankings(playersData);
     });
 
     setSocket(newSocket);
-
     return () => {
       newSocket.close();
     };
   }, []);
 
-  // Function to remove a player manually
-  const removePlayer = (socketId: string, playerName: string) => {
-    if (socket && window.confirm(`Are you sure you want to remove player "${playerName}"?`)) {
-      socket.emit('removePlayer', socketId);
-    }
+  const updateRankings = (playersData: Record<string, Player>) => {
+    const playerArray = Object.values(playersData);
+    const mockPoints = [999, 888, 777];
+
+    setGameRankings(prev =>
+      prev.map((game, idx) => ({
+        ...game,
+        players: playerArray.slice(0, 3).map((p, pIdx) => ({
+          name: p.name,
+          points: mockPoints[pIdx] - idx * 50,
+        })),
+      }))
+    );
   };
 
   const playerList = Object.entries(players);
-  const totalPlayers = playerList.length;
+  const topPlayers = playerList.slice(0, 4);
 
   return (
-    <div className="page-container">
-      <h1 className="page-title">📊 Festival Dashboard</h1>
-      <p className="page-description">
-        Real-time statistics and monitoring for the Japonism Festival.
-        Track active players, server status, and live activities.
-      </p>
-
-      {/* Connection Status */}
-      <div className="controller-info" style={{ marginBottom: '2rem' }}>
-        <div className="status-indicator">
-          <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}></div>
-          {isConnected ? '🟢 Connected to Server' : '🔴 Disconnected'}
-        </div>
-        {lastUpdate && (
-          <p style={{ marginTop: '0.5rem', color: '#666' }}>
-            Last updated: {lastUpdate}
-          </p>
-        )}
-      </div>
-
-      <div className="dashboard-grid">
-        {/* Server Statistics */}
-        <div className="dashboard-card">
-          <h3>🖥️ Server Status</h3>
-          <div>
-            <div className="player-item">
-              <span>Total Players</span>
-              <strong>{totalPlayers}</strong>
-            </div>
-            <div className="player-item">
-              <span>Map Size</span>
-              <strong>800 × 600</strong>
-            </div>
-            <div className="player-item">
-              <span>Server Time</span>
-              <strong>{new Date().toLocaleTimeString()}</strong>
-            </div>
-            <div className="player-item">
-              <span>Status</span>
-              <strong style={{ color: '#10b981' }}>🟢 Online</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Active Players */}
-        <div className="dashboard-card">
-          <h3>👥 Active Players ({totalPlayers})</h3>
-          {totalPlayers > 0 ? (
-            <div className="player-list">
-              {playerList.map(([socketId, player]) => (
-                <div key={socketId} className="player-item">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div 
-                      className="player-color" 
-                      style={{ backgroundColor: player.color }}
-                    ></div>
-                    <span>{player.name}</span>
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                    ({Math.round(player.x)}, {Math.round(player.y)})
-                  </div>
-                  <button 
-                    onClick={() => removePlayer(socketId, player.name)}
-                    style={{
-                      background: '#ff4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '2px 8px',
-                      fontSize: '0.7rem',
-                      cursor: 'pointer',
-                      marginLeft: 'auto'
-                    }}
-                    title={`Remove ${player.name}`}
-                  >
-                    ❌
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p style={{ color: '#666', fontStyle: 'italic' }}>
-              No players currently online
-            </p>
-          )}
-        </div>
-
-        {/* Festival Activities */}
-        <div className="dashboard-card">
-          <h3>🎪 Festival Activities</h3>
-          <div className="player-list">
-            <div className="player-item">
-              <span>🗺️ Venue Exploration</span>
-              <strong>{totalPlayers} active</strong>
-            </div>
-            <div className="player-item">
-              <span>🎮 Mobile Controllers</span>
-              <strong>{totalPlayers} connected</strong>
-            </div>
-            <div className="player-item">
-              <span>📊 Dashboard Views</span>
-              <strong>1 active</strong>
-            </div>
-            <div className="player-item">
-              <span>🎎 Total Sessions</span>
-              <strong>{totalPlayers}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Leaderboard Placeholder */}
-        <div className="dashboard-card">
-          <h3>🏆 Leaderboard</h3>
-          <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '1rem' }}>
-            Coming soon! Track player achievements and festival participation.
-          </p>
-          <div className="player-list">
-            {playerList.slice(0, 3).map(([socketId, player], index) => (
-              <div key={socketId} className="player-item">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.2rem' }}>
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                  </span>
-                  <div 
-                    className="player-color" 
-                    style={{ backgroundColor: player.color }}
-                  ></div>
-                  <span>{player.name}</span>
-                </div>
-                <strong>{100 - index * 10} pts</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Gallery Placeholder */}
-        <div className="dashboard-card">
-          <h3>📸 Festival Gallery</h3>
-          <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '1rem' }}>
-            Photo gallery and moments from the festival will appear here.
-          </p>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(3, 1fr)', 
-            gap: '0.5rem' 
-          }}>
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div 
-                key={i} 
-                style={{
-                  aspectRatio: '1',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '1.5rem'
-                }}
-              >
-                📷
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Raw Data (for debugging) */}
-        <div className="dashboard-card">
-          <h3>🔧 Debug Data</h3>
-          <details>
-            <summary style={{ cursor: 'pointer', marginBottom: '1rem' }}>
-              Show Raw Player Data
-            </summary>
-            <pre style={{ 
-              background: '#f5f5f5', 
-              padding: '1rem', 
-              borderRadius: '6px',
-              fontSize: '0.8rem',
-              overflow: 'auto',
-              maxHeight: '200px'
-            }}>
-              {JSON.stringify(players, null, 2)}
-            </pre>
-          </details>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .connection-status.connected {
-          background: #10b981;
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-rose-800 p-6">
+      <style>{`
+        @keyframes infiniteScroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
         }
-        .connection-status.disconnected {
-          background: #ef4444;
+        .gallery-scroll {
+          animation: infiniteScroll 20s linear infinite;
+        }
+        .gallery-scroll:hover {
+          animation-play-state: paused;
         }
       `}</style>
+
+      {/* Top Section: 5 Ranking Tables */}
+      <div className="min-h-[40vh] grid grid-cols-5 gap-4 mb-8">
+        {gameRankings.map((game, idx) => (
+          <div key={idx} className="bg-purple-300/60 backdrop-blur-md rounded-2xl p-4 shadow-lg">
+            <h3 className="text-center font-bold text-gray-800 text-sm mb-3">{game.title}</h3>
+            <table className="w-full text-xs text-gray-800">
+              <thead>
+                <tr className="bg-purple-400/40 border-b border-gray-400/30">
+                  <th className="px-2 py-1.5 text-left font-semibold">Player</th>
+                  <th className="px-2 py-1.5 text-right font-semibold">Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                {game.players.length > 0 ? (
+                  game.players.map((p, i) => (
+                    <tr key={i} className="border-b border-gray-300/20 hover:bg-purple-400/20">
+                      <td className="px-2 py-1.5">{p.name}</td>
+                      <td className="px-2 py-1.5 text-right font-semibold">{p.points}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={2} className="px-2 py-1.5 text-center">...</td>
+                  </tr>
+                )}
+                <tr className="border-t border-gray-300/30">
+                  <td className="px-2 py-1 text-center text-gray-600">...</td>
+                  <td className="px-2 py-1 text-center text-gray-600">...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom Section: Gallery + Total Ranking */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Gallery Section - 2/3 width */}
+        <div className="col-span-2 bg-purple-600/40 backdrop-blur-md rounded-2xl border-2 border-white/30 p-8 shadow-lg">
+          <h2 className="text-white text-2xl font-bold mb-4">Kimono Try on Gallery</h2>
+
+          {/* Gallery Grid with Infinite Scroll - 2 rows */}
+          <div className="space-y-4">
+            {[0, 1].map((row) => (
+              <div key={row} className="overflow-hidden">
+                <div className="gallery-scroll flex gap-4">
+                  {[...galleryImages, ...galleryImages].map((i, idx) => (
+                    <div
+                      key={`${row}-${idx}`}
+                      className="aspect-[3/4] bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-lg hover:border-white/40 transition-all flex items-center justify-center flex-shrink-0"
+                    >
+                      <Image
+                        src={i}
+                        height={400}
+                        width={250}
+                        alt="Gallery"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Total Ranking Section - 1/3 width */}
+        <div className="bg-purple-300/60 backdrop-blur-md rounded-2xl p-5 shadow-lg h-fit">
+          <h3 className="text-center font-bold text-gray-800 text-base mb-4">Total Ranking</h3>
+          <table className="w-full text-sm text-gray-800">
+            <thead>
+              <tr className="bg-purple-400/40 border-b border-gray-400/30">
+                <th className="px-2 py-2 text-center font-semibold">#</th>
+                <th className="px-2 py-2 text-left font-semibold">Player</th>
+                <th className="px-2 py-2 text-right font-semibold">Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topPlayers.length > 0 ? (
+                topPlayers.map((_, idx) => (
+                  <tr key={idx} className="border-b border-gray-300/20 hover:bg-purple-400/20">
+                    <td className="px-2 py-2 text-center font-bold">{idx + 1}</td>
+                    <td className="px-2 py-2">{playerList[idx]?.[1]?.name || '-'}</td>
+                    <td className="px-2 py-2 text-right font-bold">{999 - idx * 111}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="px-2 py-2 text-center text-gray-600">No players</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
