@@ -1,8 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { InfiniteGallery } from '@/components/ui/infinite-gallery';
 
 interface Player {
   id: string;
@@ -87,22 +87,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-rose-800 p-6">
-      <style>{`
-        @keyframes infiniteScroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-        .gallery-scroll {
-          animation: infiniteScroll 20s linear infinite;
-        }
-        .gallery-scroll:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
+
 
       {/* Top Section: 5 Ranking Tables */}
       <div className="min-h-[40vh] grid grid-cols-5 gap-4 mb-8">
@@ -143,30 +128,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-3 gap-6">
         {/* Gallery Section - 2/3 width */}
         <div className="col-span-2 bg-purple-600/40 backdrop-blur-md rounded-2xl border-2 border-white/30 p-8 shadow-lg">
-          <h2 className="text-white text-2xl font-bold mb-4">Kimono Try on Gallery</h2>
+          <h2 className="text-white text-2xl font-bold mb-6">Kimono Try on Gallery</h2>
 
           {/* Gallery Grid with Infinite Scroll - 2 rows */}
           <div className="space-y-4">
-            {[0, 1].map((row) => (
-              <div key={row} className="overflow-hidden">
-                <div className="gallery-scroll flex gap-4">
-                  {[...galleryImages, ...galleryImages].map((i, idx) => (
-                    <div
-                      key={`${row}-${idx}`}
-                      className="aspect-[3/4] bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-lg hover:border-white/40 transition-all flex items-center justify-center flex-shrink-0"
-                    >
-                      <Image
-                        src={i}
-                        height={400}
-                        width={250}
-                        alt="Gallery"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <InfiniteGallery
+              images={galleryImages}
+              direction="left"
+              speed="normal"
+              pauseOnHover={true}
+              className="w-full"
+            />
+            <InfiniteGallery
+              images={galleryImages}
+              direction="left"
+              speed="normal"
+              pauseOnHover={true}
+              className="w-full"
+            />
           </div>
         </div>
 
