@@ -92,7 +92,7 @@ export default function Page() {
       }
     } catch (err) {
       console.error("Camera error:", err);
-      let errorMessage = "Unable to access camera. Please check permissions.";
+      let errorMessage = "カメラにアクセスできません。権限を確認してください。";
 
       if (err instanceof Error) {
         if (
@@ -100,17 +100,17 @@ export default function Page() {
           err.name === "PermissionDeniedError"
         ) {
           errorMessage =
-            "Camera permission denied. Please allow camera access in your browser settings.";
+            "カメラの権限が拒否されました。ブラウザの設定でカメラへのアクセスを許可してください。";
         } else if (
           err.name === "NotFoundError" ||
           err.name === "DevicesNotFoundError"
         ) {
-          errorMessage = "No camera found on your device.";
+          errorMessage = "デバイスにカメラが見つかりません。";
         } else if (
           err.name === "NotReadableError" ||
           err.name === "TrackStartError"
         ) {
-          errorMessage = "Camera is already in use by another application.";
+          errorMessage = "カメラは別のアプリケーションで使用されています。";
         } else if (err.message) {
           errorMessage = err.message;
         }
@@ -222,12 +222,13 @@ export default function Page() {
             className="flex flex-col items-center space-y-6"
           >
             <div className="space-y-4 p-6 bg-gray-50/50 rounded-2xl">
-              <h1 className="text-2xl font-bold">
-                Welcome to <br /> Kimono try-on
-              </h1>
+              <h1 className="text-2xl font-bold">着物試着へようこそ</h1>
               <p className="text-lg text-gray-900 max-w-md">
-                This is your guide to get started with the virtual festival
-                experience. Follow the steps to customize your experience.
+                顔写真を撮って
+                <br />
+                AIで処理して写真
+                <br />
+                を返します
               </p>
             </div>
             <button
@@ -237,7 +238,7 @@ export default function Page() {
               }}
               className="px-8 py-3 bg-violet-500 text-white rounded-lg font-semibold hover:bg-violet-600 transition-colors"
             >
-              Start
+              始める
             </button>
           </motion.div>
         );
@@ -259,7 +260,7 @@ export default function Page() {
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={capturedImage}
-                  alt="Captured photo"
+                  alt="撮影した写真"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -289,10 +290,10 @@ export default function Page() {
                         </svg>
                       </div>
                       <h3 className="text-white text-xl font-bold mb-2">
-                        Enable Camera
+                        カメラを有効にする
                       </h3>
                       <p className="text-white/90 mb-6 max-w-xs">
-                        Click the button below to access your camera
+                        下のボタンをクリックしてカメラにアクセスしてください
                       </p>
                       <button
                         onClick={() => {
@@ -301,7 +302,7 @@ export default function Page() {
                         }}
                         className="px-8 py-3 bg-white text-violet-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg"
                       >
-                        Enable Camera
+                        カメラを有効にする
                       </button>
                     </div>
                   )}
@@ -311,7 +312,7 @@ export default function Page() {
                     <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-10">
                       <div className="flex flex-col items-center text-white">
                         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mb-3"></div>
-                        <p>Loading camera...</p>
+                        <p>カメラを読み込み中...</p>
                       </div>
                     </div>
                   )}
@@ -337,7 +338,7 @@ export default function Page() {
                         onClick={startCamera}
                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                       >
-                        Try Again
+                        再試行
                       </button>
                     </div>
                   )}
@@ -365,13 +366,13 @@ export default function Page() {
                     onClick={retakeImage}
                     className="flex-1 py-3 px-6 bg-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-300 transition-colors"
                   >
-                    Retake
+                    撮り直す
                   </button>
                   <button
                     onClick={confirmImage}
                     className="flex-1 py-3 px-6 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
                   >
-                    Confirm
+                    確定
                   </button>
                 </>
               ) : (
@@ -380,7 +381,7 @@ export default function Page() {
                   disabled={!isCameraReady || isLoadingCamera}
                   className="w-full py-3 px-6 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
-                  Take Photo
+                  写真を撮る
                 </button>
               )}
             </div>
@@ -398,7 +399,9 @@ export default function Page() {
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center space-y-6"
           >
-            <h1 className="text-4xl font-bold">着物スタイルを選択</h1>
+            <h1 className="text-4xl text-white font-bold">
+              着物スタイルを選択
+            </h1>
             {isGenerating ? (
               <div className="flex flex-col items-center space-y-4 py-12">
                 <div className="w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
@@ -417,9 +420,11 @@ export default function Page() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.1, duration: 0.3 }}
                       onClick={() => generateKimono(style)}
-                      className="p-6 border-2 border-gray-300 rounded-lg hover:border-violet-500 hover:bg-violet-50 transition-colors"
+                      className="p-6 border-2 border-gray-300 rounded-lg hover:border-violet-500 transition-colors bg-gray-800"
                     >
-                      <span className="text-xl font-semibold">{style}</span>
+                      <span className="text-xl font-semibold text-white">
+                        {style}
+                      </span>
                     </motion.button>
                   ))}
                 </div>
@@ -445,7 +450,7 @@ export default function Page() {
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center space-y-6 w-full max-w-2xl"
           >
-            <h1 className="text-4xl font-bold">着物姿が完成！</h1>
+            <h1 className="text-4xl text-white font-bold">着物姿が完成！</h1>
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

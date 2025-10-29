@@ -43,29 +43,37 @@ export async function POST(request: NextRequest) {
 
     // Style-specific prompts
     const stylePrompts: Record<string, string> = {
-      'Anime': `A portrait of a person with this face: ${faceDescription}. 
+      'Anime': `CRITICAL: Use EXACTLY this person's facial features: ${faceDescription}. Do not create a generic anime character - recreate this specific person's face with anime styling.
+
+A highly detailed anime-style portrait of THIS SPECIFIC PERSON with these exact facial features: ${faceDescription}.
 The person is wearing a vibrant traditional Japanese festival kimono (yukata) with colorful patterns.
-Anime art style with bold colors, clean lines, and expressive eyes.
+Apply anime art style (bold colors, clean lines, expressive eyes) WHILE PRESERVING the exact face shape, eye shape, nose, mouth, skin tone, hair color and age from the description above.
 Background: lively Japanese summer festival (matsuri) with lanterns, food stalls, and festival decorations.
-Focus on the person and their beautiful kimono. Professional anime illustration style.`,
+The face must match the description exactly - same eye shape, same nose, same mouth, same expression. Professional anime illustration maintaining photorealistic facial accuracy.`,
 
-      'Art': `A portrait of a person with this face: ${faceDescription}.
+      'Art': `CRITICAL: Use EXACTLY this person's facial features: ${faceDescription}. Do not create a generic character - recreate this specific person's face in ukiyo-e style.
+
+A highly detailed ukiyo-e woodblock print portrait of THIS SPECIFIC PERSON with these exact facial features: ${faceDescription}.
 The person is wearing an elegant traditional Japanese kimono with intricate patterns.
-Traditional Japanese ukiyo-e woodblock print art style with refined colors and artistic composition.
+Apply traditional Japanese ukiyo-e art style (refined colors, artistic composition) WHILE PRESERVING the exact face shape, eye shape, nose, mouth, skin tone, hair color and age from the description above.
 Background: serene Japanese festival scene with cherry blossoms, traditional architecture, and soft lighting.
-Focus on the person in their exquisite kimono. Artistic, elegant, timeless aesthetic.`,
+The face must match the description exactly - same eye shape, same nose, same mouth, same expression. Artistic, elegant, timeless aesthetic with photorealistic facial accuracy.`,
 
-      'fantasy': `A portrait of a person with this face: ${faceDescription}.
+      'Fantasy': `CRITICAL: Use EXACTLY this person's facial features: ${faceDescription}. Do not create a generic fantasy character - recreate this specific person's face with fantasy elements.
+
+A highly detailed fantasy art portrait of THIS SPECIFIC PERSON with these exact facial features: ${faceDescription}.
 The person is wearing a magical fantasy-style Japanese kimono with ethereal patterns and glowing accents.
-Fantasy art style with dreamy atmosphere, soft magical lighting, and enchanted elements.
+Apply fantasy art style (dreamy atmosphere, soft magical lighting, enchanted elements) WHILE PRESERVING the exact face shape, eye shape, nose, mouth, skin tone, hair color and age from the description above.
 Background: mystical Japanese festival with floating lanterns, cherry blossom petals in the air, and magical ambiance.
-Focus on the person in their enchanted kimono. Whimsical, dreamlike, fantasy aesthetic.`,
+The face must match the description exactly - same eye shape, same nose, same mouth, same expression. Whimsical, dreamlike, fantasy aesthetic with photorealistic facial accuracy.`,
 
-      'ghibli': `A portrait of a person with this face: ${faceDescription}.
-The person is wearing a beautiful traditional Japanese festival kimono with charming patterns.
-Studio Ghibli animation style with warm colors, soft shading, and heartwarming atmosphere.
-Background: nostalgic Japanese summer festival scene with paper lanterns, wooden stalls, and gentle evening sky.
-Focus on the person in their lovely kimono. Ghibli-style warmth, detail, and emotion.`
+      'Ghibli': `CRITICAL: Use EXACTLY this person's facial features: ${faceDescription}. Do not create a generic Ghibli character - recreate this specific person's face in Studio Ghibli style.
+
+A highly detailed Studio Ghibli style portrait of THIS SPECIFIC PERSON with these exact facial features: ${faceDescription}.
+The person is wearing a beautiful traditional Japanese festival kimono with charming, hand-drawn patterns.
+Apply authentic Studio Ghibli animation style (soft watercolor-like colors, gentle shading, expressive large eyes, warm nostalgic atmosphere) WHILE PRESERVING the exact face shape, eye shape, nose, mouth, skin tone, hair color and age from the description above.
+Background: traditional Japanese summer festival with paper lanterns, wooden food stalls, and soft evening lighting.
+The face must match the description exactly - same eye shape, same nose, same mouth, same expression. Pure Ghibli aesthetic like My Neighbor Totoro or Spirited Away with photorealistic facial accuracy.`
     };
 
     const fullPrompt = stylePrompts[style] || stylePrompts['Anime'];
