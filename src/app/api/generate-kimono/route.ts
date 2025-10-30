@@ -43,70 +43,43 @@ export async function POST(request: NextRequest) {
 
     const faceDescription = visionResponse.choices[0].message.content;
 
-    // Style-specific prompts with enhanced face preservation
+    // Enhanced prompts with face preservation focus
     const stylePrompts: Record<string, string> = {
-      'Anime': `MANDATORY: Recreate the EXACT facial features from this description with PHOTOREALISTIC accuracy. DO NOT create a generic anime character.
+      'Anime': `Photorealistic portrait of a real person with EXACT facial features: ${faceDescription}.
 
-Photorealistic anime portrait of a real person with these PRECISE facial features: ${faceDescription}.
+The person is wearing a vibrant traditional Japanese festival yukata kimono with colorful patterns.
+Anime art style applied ONLY to the kimono and background - face remains completely photorealistic.
+Festival background with lanterns and stalls. The face shape, eyes, nose, mouth, skin tone, and hair must be identical to the description.`,
 
-The subject has these exact physical characteristics that MUST be preserved:
-- Face shape, eye shape, nose shape, mouth shape
-- Exact skin tone, hair color, and hairstyle
-- Age and gender expression
+      'Art': `Photorealistic portrait of a real person with EXACT facial features: ${faceDescription}.
 
-Apply anime art style (bold lines, vibrant colors, expressive features) to this SPECIFIC person's face and body. The person is wearing a traditional Japanese festival yukata with colorful patterns.
+The person is wearing an elegant traditional Japanese kimono with intricate patterns.
+Ukiyo-e woodblock art style applied ONLY to the kimono and background - face remains completely photorealistic.
+Serene festival background with cherry blossoms. The face shape, eyes, nose, mouth, skin tone, and hair must be identical to the description.`,
 
-Festival background with lanterns and stalls. The facial features must be photorealistically accurate to the description - no generic anime face.`,
+      'Fantasy': `Photorealistic portrait of a real person with EXACT facial features: ${faceDescription}.
 
-      'Art': `MANDATORY: Recreate the EXACT facial features from this description with PHOTOREALISTIC accuracy. DO NOT create a generic character.
+The person is wearing a magical fantasy-style Japanese kimono with ethereal patterns and glowing accents.
+Fantasy art style applied ONLY to the kimono and background - face remains completely photorealistic.
+Mystical festival background with floating lanterns. The face shape, eyes, nose, mouth, skin tone, and hair must be identical to the description.`,
 
-Photorealistic ukiyo-e portrait of a real person with these PRECISE facial features: ${faceDescription}.
+      'Ghibli': `Photorealistic portrait of a real person with EXACT facial features: ${faceDescription}.
 
-The subject has these exact physical characteristics that MUST be preserved:
-- Face shape, eye shape, nose shape, mouth shape
-- Exact skin tone, hair color, and hairstyle
-- Age and gender expression
-
-Apply traditional Japanese ukiyo-e woodblock art style to this SPECIFIC person's face and body. The person is wearing an elegant traditional Japanese kimono with intricate patterns.
-
-Serene festival background with cherry blossoms and architecture. The facial features must be photorealistically accurate to the description.`,
-
-      'Fantasy': `MANDATORY: Recreate the EXACT facial features from this description with PHOTOREALISTIC accuracy. DO NOT create a generic fantasy character.
-
-Photorealistic fantasy portrait of a real person with these PRECISE facial features: ${faceDescription}.
-
-The subject has these exact physical characteristics that MUST be preserved:
-- Face shape, eye shape, nose shape, mouth shape
-- Exact skin tone, hair color, and hairstyle
-- Age and gender expression
-
-Apply fantasy art style (magical elements, soft lighting) to this SPECIFIC person's face and body. The person is wearing a magical Japanese kimono with ethereal patterns and glowing accents.
-
-Mystical festival background with floating lanterns and cherry blossoms. The facial features must be photorealistically accurate to the description.`,
-
-      'Ghibli': `MANDATORY: Recreate the EXACT facial features from this description with PHOTOREALISTIC accuracy. DO NOT create a generic Ghibli character.
-
-Photorealistic Studio Ghibli portrait of a real person with these PRECISE facial features: ${faceDescription}.
-
-The subject has these exact physical characteristics that MUST be preserved:
-- Face shape, eye shape, nose shape, mouth shape
-- Exact skin tone, hair color, and hairstyle
-- Age and gender expression
-
-Apply authentic Studio Ghibli animation style (watercolor textures, gentle shading, expressive eyes) to this SPECIFIC person's face and body. The person is wearing a traditional Japanese festival kimono with charming patterns.
-
-Nostalgic festival background with paper lanterns and wooden stalls. The facial features must be photorealistically accurate to the description - authentic Ghibli style but with the exact real person's face.`
+The person is wearing a beautiful traditional Japanese festival kimono with charming patterns.
+Studio Ghibli watercolor style applied ONLY to the kimono and background - face remains completely photorealistic.
+Nostalgic festival background with paper lanterns. The face shape, eyes, nose, mouth, skin tone, and hair must be identical to the description.`
     };
 
     const fullPrompt = stylePrompts[style] || stylePrompts['Anime'];
 
-    // Generate kimono image using DALL-E 3
+    // Generate kimono image using DALL-E 3 with enhanced settings
     const imageResponse = await openai.images.generate({
       model: "dall-e-3",
       prompt: fullPrompt,
       n: 1,
       size: "1024x1792", // Portrait aspect ratio
       quality: "hd",
+      style: "natural" // More photorealistic results
     });
 
     const generatedImageUrl = imageResponse.data?.[0]?.url;
@@ -116,11 +89,9 @@ Nostalgic festival background with paper lanterns and wooden stalls. The facial 
         { success: false, error: 'No image generated' },
         { status: 500 }
       );
-    }
-
-    // Download and save image locally
-    const imageResponseFetch = await fetch(generatedImageUrl);
-    const imageBuffer = await imageResponseFetch.arrayBuffer();
+    }    // Download and save image locally
+    const imageResponseFetch = await fetch(generatedImageUrl as string);
+    const downloadedImageBuffer = await imageResponseFetch.arrayBuffer();
     
     // Generate unique filename
     const timestamp = Date.now();
@@ -135,7 +106,7 @@ Nostalgic festival background with paper lanterns and wooden stalls. The facial 
     }
     
     // Save image
-    fs.writeFileSync(filepath, Buffer.from(imageBuffer));
+    fs.writeFileSync(filepath, Buffer.from(downloadedImageBuffer));
     
     // Return local path
     const imageUrl = `/images/zone_1/${filename}`;
