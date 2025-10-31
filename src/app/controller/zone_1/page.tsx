@@ -135,16 +135,43 @@ export default function Page() {
 
     if (!ctx) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Calculate portrait crop (9:16 aspect ratio for efficiency)
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    
+    // Target 9:16 portrait ratio (1024x1536 on server)
+    const targetRatio = 9 / 16;
+    let cropWidth = videoWidth;
+    let cropHeight = videoWidth / targetRatio;
+    
+    // If height is limiting, adjust width
+    if (cropHeight > videoHeight) {
+      cropHeight = videoHeight;
+      cropWidth = videoHeight * targetRatio;
+    }
+    
+    // Center crop
+    const cropX = (videoWidth - cropWidth) / 2;
+    const cropY = (videoHeight - cropHeight) / 2;
+
+    // Set canvas to portrait with optimized dimensions
+    // Smaller upload size reduces processing time and tokens
+    canvas.width = 512;
+    canvas.height = 896;
 
     // Mirror the image horizontally
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
 
-    ctx.drawImage(video, 0, 0);
-    // JPEG quality 0.6 để giảm kích thước file
-    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.6);
+    // Draw cropped video to portrait canvas
+    ctx.drawImage(
+      video,
+      cropX, cropY, cropWidth, cropHeight,
+      0, 0, canvas.width, canvas.height
+    );
+    
+    // JPEG quality 0.52 - optimal balance between upload size and quality
+    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.52);
     setCapturedImage(imageDataUrl);
 
     // Reset transformation

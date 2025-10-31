@@ -41,15 +41,15 @@ export async function POST(request: NextRequest) {
     fs.writeFileSync(tempFilePath, inputImageBuffer);
     console.log('[KIMONO] Temp file created:', tempFilePath);
 
-    // Style-specific prompts for gpt-image-1 edit mode
+    // Style-specific prompts - optimized for efficiency (reduced tokens by ~50%)
     const stylePrompts: Record<string, string> = {
-      'Anime': 'Create a portrait of this person wearing a vibrant traditional Japanese festival yukata kimono with colorful anime-style patterns. Apply anime art style only to the kimono and background while preserving the person\'s face and facial features exactly as they are. Add a beautiful festival background with lanterns.',
+      'Anime': 'Person wearing vibrant Japanese festival kimono, anime-style patterns. Anime art style on kimono and background, preserve face exactly. Festival lanterns backdrop.',
 
-      'Art': 'Create a portrait of this person wearing an elegant traditional Japanese kimono with intricate artistic patterns. Apply Ukiyo-e woodblock art style to the kimono and background while keeping the person\'s face completely unchanged. Add a serene festival background with cherry blossoms.',
+      'Art': 'Person in elegant traditional Japanese kimono, intricate patterns. Ukiyo-e woodblock style on clothing and background, face unchanged. Serene cherry blossom scene.',
 
-      'Fantasy': 'Create a portrait of this person wearing a magical fantasy-style Japanese kimono with ethereal patterns and glowing accents. Apply fantasy art style to the clothing and surroundings while keeping the person\'s face exactly as it appears. Add a mystical festival background with floating lanterns.',
+      'Fantasy': 'Person in magical fantasy Japanese kimono, ethereal glowing patterns. Fantasy art style on outfit and surroundings, preserve face. Mystical festival with floating lanterns.',
 
-      'Ghibli': 'Create a portrait of this person wearing a beautiful traditional Japanese festival kimono with charming patterns. Apply Studio Ghibli watercolor art style to the kimono and background while preserving the person\'s face. Add a nostalgic festival background with paper lanterns.'
+      'Ghibli': 'Person in beautiful Japanese festival kimono. Studio Ghibli watercolor style on clothing and background, preserve face. Nostalgic festival with paper lanterns.'
     };
 
     const prompt = stylePrompts[style] || stylePrompts['Anime'];
@@ -66,26 +66,20 @@ export async function POST(request: NextRequest) {
     // Call gpt-image-1 edit API
     console.log('[KIMONO] Calling gpt-image-1 edit API...');
     console.log('[KIMONO] Model: gpt-image-1');
-    console.log('[KIMONO] Size: 1024x1024');
-    console.log('[KIMONO] Quality: high');
-    console.log('[KIMONO] Input fidelity: high');
+    console.log('[KIMONO] Size: 1024x1536 (portrait format)');
+    console.log('[KIMONO] Quality: standard');
     
     const editResponse = await openai.images.edit({
       model: 'gpt-image-1',
       image: imageFile,
       prompt: prompt,
       n: 1,
-      input_fidelity: 'high',
       size: '1024x1536',
-      quality: 'high'
+      quality: 'medium'
     });
 
     console.log('[KIMONO] Edit API response received');
     console.log('[KIMONO] Response status: OK');
-    console.log('[KIMONO] Full response:', JSON.stringify(editResponse, null, 2));
-    console.log('[KIMONO] Response keys:', Object.keys(editResponse));
-    console.log('[KIMONO] Response.data:', editResponse.data);
-    console.log('[KIMONO] Response.data type:', typeof editResponse.data);
 
     let imageBuffer: Buffer | null = null;
     
