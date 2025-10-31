@@ -1,7 +1,9 @@
+import Image from "next/image";
+
 export default function Header() {
     return (
-        <header className="w-full text-center p-4 text-white">
-            <h1 className="text-xl font-bold">Virtual Festival</h1>
+        <header className="mx-auto my-2">
+            <Image src="/logo.svg" alt="Logo" width={150} height={100} />
         </header>
     );
 }

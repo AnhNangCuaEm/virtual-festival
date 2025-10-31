@@ -3,6 +3,7 @@
 
 import Header from "@/components/layout/Header";
 import MuteBtn from "@/components/ui/MuteBtn";
+import BackBtn from "@/components/ui/BackBtn";
 import Link from "next/link";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -219,7 +220,7 @@ export default function Page() {
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center space-y-6"
           >
-            <div className="space-y-4 p-6 bg-gray-50/50 rounded-2xl">
+            <div className="space-y-4 p-6 bg-theme-purple rounded-3xl">
               <h1 className="text-3xl font-bold">山手線クイズ</h1>
               <p className="text-lg font-semibold text-gray-900 max-w-md">
                 山手線について{QData.length}問のクイズです。
@@ -231,7 +232,7 @@ export default function Page() {
             </div>
             <button
               onClick={startQuiz}
-              className="px-8 py-3 bg-violet-500 text-white rounded-lg font-semibold hover:bg-violet-600 transition-colors"
+              className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
             >
               スタート
             </button>
@@ -258,16 +259,15 @@ export default function Page() {
           >
             {/* Timers */}
             <div className="w-full flex justify-between items-center px-4">
-              <div className="text-lg font-semibold">
+              <div className="text-lg text-white font-semibold">
                 問題 {currentQuestionIndex + 1}/{QData.length}
               </div>
               <div className="flex gap-4">
                 <div
-                  className={`w-24 px-4 py-2 rounded-lg font-bold ${
-                    miniTimer <= 5
-                      ? "bg-red-500/60 text-white"
-                      : "bg-blue-500/60 text-white"
-                  }`}
+                  className={`w-24 px-4 py-2 rounded-lg font-bold ${miniTimer <= 5
+                    ? "bg-red-400/60 text-white"
+                    : "bg-theme-purple/80 text-white"
+                    }`}
                 >
                   ⏱️ {miniTimer}秒
                 </div>
@@ -303,7 +303,7 @@ export default function Page() {
                 const isTimeout = isAnswered && !selectedAnswer; // Timeout case
 
                 let buttonClass =
-                  "p-6 border-2 rounded-lg font-semibold transition-all ";
+                  "p-6 border-2 bg-theme-yellow rounded-lg font-semibold transition-all";
 
                 if (!showResult) {
                   buttonClass += "border-gray-300 hover:border-violet-500";
@@ -340,12 +340,12 @@ export default function Page() {
               })}
             </div>
 
-            <div className="px-4 py-2 bg-gray-700 text-white rounded-lg font-bold">
+            <div className="px-4 py-2 bg-gray-400 text-white rounded-full font-bold">
               合計: {formatTime(totalTimer)}
             </div>
 
             {/* Score display */}
-            <div className="text-xl font-bold text-purple-600">
+            <div className="text-xl font-bold text-theme-purple">
               現在のスコア: {totalScore}点
             </div>
           </motion.div>
@@ -366,23 +366,21 @@ export default function Page() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="w-full p-8 bg-purple-300/60 rounded-2xl flex flex-col items-center justify-center space-y-4"
+              className="w-full p-8 bg-purple-300/60 rounded-4xl flex flex-col items-center justify-center space-y-2"
             >
-              <h1 className="text-4xl font-bold text-black">Congratulation</h1>
+              <h1 className="text-5xl font-bold text-black">Congratulation</h1>
               <p className="text-xl text-black font-bold">
-                Finished in{" "}
-                <span className="text-red-500 font-bold">
+                <span className="text-2xl text-red-500 font-bold mr-1">
                   {formatTime(totalTimer)}
                 </span>
-                s
+                秒でクリアしました！
               </p>
-              <p className="text-6xl font-bold text-green-500">
+              <p className="text-4xl font-bold text-green-500">
                 {totalScore}
                 <span className="text-2xl text-black"> Points</span>
               </p>
 
-              <div className="w-full mt-6">
-                <h2 className="text-3xl font-bold text-center mb-4">Result</h2>
+              <div className="w-full mt-1">
                 <div className="bg-purple-200/60 rounded-xl p-6">
                   <div className="grid grid-cols-2 gap-4 pb-2">
                     <div className="text-center font-bold text-black">
@@ -422,12 +420,18 @@ export default function Page() {
                 </div>
               </div>
             </motion.div>
-            <button
+            {/* <button
               onClick={restartQuiz}
               className="px-8 py-3 bg-violet-500 text-white rounded-lg font-semibold hover:bg-violet-600 transition-colors"
             >
               もう一度挑戦
-            </button>
+            </button> */}
+            <Link
+              href="/controller/"
+              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold"
+            >
+              コントローラーに戻る
+            </Link>
           </motion.div>
         );
 
@@ -437,15 +441,11 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
+    <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Header />
       {/* Back and mute button */}
       <div className="w-full h-16 flex items-center justify-between px-8">
-        <Link href="/controller">
-          <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-            Back
-          </button>
-        </Link>
+        <BackBtn />
         <MuteBtn />
       </div>
       {/* Main content */}

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as headbreaker from 'headbreaker';
 import Header from '@/components/layout/Header';
 import MuteBtn from '@/components/ui/MuteBtn';
+import BackBtn from '@/components/ui/BackBtn';
 import Link from 'next/link';
 
 const imageList = [
@@ -17,7 +18,7 @@ function formatTime(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   const ss = s.toString().padStart(2, '0');
-  return `${m}:${ss}s`;
+  return `${m}:${ss}`;
 }
 
 export default function Zone4() {
@@ -217,20 +218,14 @@ export default function Zone4() {
   const startBg = imageList[level] ?? '';
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-[#1f2430]">
+    <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-4">
-        <Link href="/controller">
-          <button className="p-2 px-4 bg-gray-200/80 rounded-lg text-black font-semibold">
-            Back
-          </button>
-        </Link>
+        <BackBtn />
         <MuteBtn />
       </div>
 
       <main className="relative flex flex-col items-center justify-start w-full flex-1 px-4 text-center space-y-4">
-        <h1 className="text-2xl font-bold text-white">富士山パズルゲーム</h1>
-
         {/* スタートページ */}
         {showStart && !isFinished && (
           <div
@@ -247,17 +242,16 @@ export default function Zone4() {
               }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-              <div className="max-w-[85%] w-full bg-white/80 backdrop-blur-md rounded-xl p-4 text-[#1f2430] shadow">
-                <h2 className="text-base font-semibold mb-2">Description</h2>
-                <p className="text-sm leading-relaxed">
+              <div className="w-fit bg-theme-purple rounded-3xl px-8 py-6 mb-4 text-[#1f2430] shadow">
+                <h1 className="text-2xl font-bold mb-4">富士山パズルゲーム</h1>
+                <p className="text-lg leading-relaxed">
                   次のパズルを解いてください。<br />
-                  早いほどポイントが取れる
+                  早いほどポイントが取れます。
                 </p>
               </div>
               <button
                 onClick={handleStart}
-                className="mt-6 px-8 py-3 rounded-full font-semibold text-[#1f2430] shadow active:scale-[0.98]"
-                style={{ background: 'linear-gradient(180deg, #F7FF9E 0%, #E8FF57 100%)' }}
+                className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
               >
                 Start
               </button>
@@ -266,14 +260,14 @@ export default function Zone4() {
         )}
 
         {!showStart && !isFinished && (
-          <div className="flex items-center gap-2 text-white/90">
+          <div className="flex items-center gap-2 text-lg text-white/90">
             <div className="px-3 py-1 rounded bg-white/10">Time: {formatTime(totalSeconds)}</div>
             <div className="px-3 py-1 rounded bg-white/10">Score: {score}</div>
             <button
               onClick={handleSkip}
-              className="px-3 py-1 rounded bg-red-500/90 text-white active:scale-[0.98]"
+              className="px-3 py-1 ml-2 rounded-full bg-red-500/90 text-white active:scale-[0.98]"
             >
-              SKIP
+              Skip
             </button>
           </div>
         )}
@@ -294,30 +288,29 @@ export default function Zone4() {
               }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-              <div className="text-2xl md:text-3xl font-bold text-black drop-shadow-sm mb-3">
+              <div className="text-5xl font-bold text-white mb-4">
                 Congratulation
               </div>
-              <div className="text-base md:text-lg font-medium text-black mb-1">
-                Finished in <span className="text-red-600 font-bold">{formatTime(totalSeconds)}</span>
+              <div className="text-xl text-white font-bold">
+                <span className="text-2xl text-red-500 font-bold mr-1">{formatTime(totalSeconds)}</span>
+                秒でクリアしました！
               </div>
-              <div className="text-lg md:text-xl font-bold" style={{ color: '#4cc84c' }}>
-                {score} Point
+              <div className="text-4xl font-bold text-green-500">
+                {score} Points
               </div>
 
               <div className="mt-6 flex gap-3">
-                <button
+                {/* <button
                   onClick={handleRestart}
                   className="px-4 py-2 rounded-lg bg-white/80 text-[#1f2430] font-semibold active:scale-[0.98]"
                 >
                   Restart
-                </button>
-                <Link href="/controller">
-                  <button
-                    className="px-4 py-2 rounded-lg text-[#1f2430] font-semibold active:scale-[0.98]"
-                    style={{ background: 'linear-gradient(180deg, #F7FF9E 0%, #E8FF57 100%)' }}
-                  >
-                    Back to Menu
-                  </button>
+                </button> */}
+                <Link
+                  href="/controller/"
+                  className="px-8 py-3 bg-theme-yellow text-black rounded-lg font-semibold"
+                >
+                  コントローラーに戻る
                 </Link>
               </div>
             </div>
@@ -349,9 +342,9 @@ export default function Zone4() {
           !showStart && (
             <>
               {!isFinished && (
-                <div className="w-full bg-white/10 rounded-lg border border-white/20 px-4 py-3">
-                  <div 
-                    className="rounded"
+                <div className="w-full bg-white/10 rounded-xl border border-white/20 p-3">
+                  <div
+                    className="rounded-lg"
                     style={{
                       width: '100%',
                       height: 'auto',
@@ -366,7 +359,7 @@ export default function Zone4() {
               <div
                 ref={puzzleRef}
                 id="puzzle"
-                className="relative rounded-xl"
+                className="relative"
                 style={{
                   width: `${canvasSize.width}px`,
                   height: `${canvasSize.height}px`,

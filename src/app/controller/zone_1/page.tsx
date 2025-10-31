@@ -2,7 +2,7 @@
 
 import Header from "@/components/layout/Header";
 import MuteBtn from "@/components/ui/MuteBtn";
-import Link from "next/link";
+import BackBtn from "@/components/ui/BackBtn";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -138,18 +138,18 @@ export default function Page() {
     // Calculate portrait crop (9:16 aspect ratio for efficiency)
     const videoWidth = video.videoWidth;
     const videoHeight = video.videoHeight;
-    
+
     // Target 9:16 portrait ratio (1024x1536 on server)
     const targetRatio = 9 / 16;
     let cropWidth = videoWidth;
     let cropHeight = videoWidth / targetRatio;
-    
+
     // If height is limiting, adjust width
     if (cropHeight > videoHeight) {
       cropHeight = videoHeight;
       cropWidth = videoHeight * targetRatio;
     }
-    
+
     // Center crop
     const cropX = (videoWidth - cropWidth) / 2;
     const cropY = (videoHeight - cropHeight) / 2;
@@ -169,7 +169,7 @@ export default function Page() {
       cropX, cropY, cropWidth, cropHeight,
       0, 0, canvas.width, canvas.height
     );
-    
+
     // JPEG quality 0.52 - optimal balance between upload size and quality
     const imageDataUrl = canvas.toDataURL("image/jpeg", 0.52);
     setCapturedImage(imageDataUrl);
@@ -208,9 +208,9 @@ export default function Page() {
       // Chuyển base64 thành blob để kiểm tra kích thước
       let base64Image = capturedImage.split(",")[1];
       const blobSize = Buffer.byteLength(base64Image, 'base64') / 1024; // KB
-      
+
       console.log('[CLIENT] Image size:', blobSize.toFixed(2), 'KB');
-      
+
       // Nếu ảnh quá lớn (> 500KB), nén thêm
       if (blobSize > 500) {
         console.log('[CLIENT] Image too large, compressing...');
@@ -222,7 +222,7 @@ export default function Page() {
             const scaleFactor = 0.7;
             canvas.width = canvas.width * scaleFactor;
             canvas.height = canvas.height * scaleFactor;
-            
+
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             if (tempCtx) {
@@ -275,14 +275,10 @@ export default function Page() {
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center space-y-6"
           >
-            <div className="space-y-4 p-6 bg-gray-50/50 rounded-2xl">
+            <div className="space-y-4 p-6 bg-theme-purple rounded-2xl">
               <h1 className="text-2xl font-bold">着物試着へようこそ</h1>
-              <p className="text-lg text-gray-900 max-w-md">
-                顔写真を撮って
-                <br />
-                AIで処理して写真
-                <br />
-                を返します
+              <p className="text-lg text-gray-900 font-medium leading-relaxed">
+                この体験では、カメラで撮影したあなたの写真を使って、さまざまなスタイルの着物を仮想的に試着できます。準備ができたら、下の「始める」ボタンをクリックしてください。
               </p>
             </div>
             <button
@@ -290,7 +286,7 @@ export default function Page() {
                 setCurrentState("preview");
                 setCameraInitialized(false);
               }}
-              className="px-8 py-3 bg-violet-500 text-white rounded-lg font-semibold hover:bg-violet-600 transition-colors"
+              className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
             >
               始める
             </button>
@@ -418,13 +414,13 @@ export default function Page() {
                 <>
                   <button
                     onClick={retakeImage}
-                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-800 rounded-xl font-medium"
                   >
                     撮り直す
                   </button>
                   <button
                     onClick={confirmImage}
-                    className="flex-1 py-3 px-6 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
+                    className="flex-1 py-3 px-6 bg-theme-yellow rounded-xl font-medium"
                   >
                     確定
                   </button>
@@ -433,7 +429,7 @@ export default function Page() {
                 <button
                   onClick={captureImage}
                   disabled={!isCameraReady || isLoadingCamera}
-                  className="w-full py-3 px-6 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-3 px-6 bg-theme-yellow rounded-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   写真を撮る
                 </button>
@@ -451,7 +447,7 @@ export default function Page() {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="flex flex-col items-center space-y-6"
+            className="flex flex-col items-center space-y-16"
           >
             <h1 className="text-4xl text-white font-bold">
               着物スタイルを選択
@@ -474,9 +470,9 @@ export default function Page() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.1, duration: 0.3 }}
                       onClick={() => generateKimono(style)}
-                      className="p-6 border-2 border-gray-300 rounded-lg hover:border-violet-500 transition-colors bg-gray-800"
+                      className="p-6 border-2 bg-theme-yellow border-gray-300 rounded-lg"
                     >
-                      <span className="text-xl font-semibold text-white">
+                      <span className="text-xl font-semibold">
                         {style}
                       </span>
                     </motion.button>
@@ -484,7 +480,7 @@ export default function Page() {
                 </div>
                 <button
                   onClick={() => setCurrentState("preview")}
-                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-400"
                 >
                   戻る
                 </button>
@@ -531,7 +527,7 @@ export default function Page() {
                   setGeneratedImage(null);
                   setCapturedImage(null);
                 }}
-                className="px-6 py-3 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-colors font-semibold"
+                className="px-6 py-3 bg-theme-yellow text-white rounded-lg font-semibold"
               >
                 最初からやり直す
               </button>
@@ -539,7 +535,7 @@ export default function Page() {
                 <a
                   href={generatedImage}
                   download="kimono-result.jpg"
-                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold text-center"
+                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold text-center"
                 >
                   画像をダウンロード
                 </a>
@@ -554,15 +550,10 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
+    <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Header />
-      {/* Back and mute button */}
       <div className="w-full h-16 flex items-center justify-between px-8">
-        <Link href="/controller">
-          <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-            Back
-          </button>
-        </Link>
+        <BackBtn />
         <MuteBtn />
       </div>
       {/* Main content */}

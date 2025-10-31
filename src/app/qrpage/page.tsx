@@ -3,12 +3,13 @@ import Link from "next/link";
 
 export default function QRPage() {
     return (
-        <div className="min-h-screen flex flex-col backdrop-blur-sm">
-            <main className="container flex flex-col justify-center mx-auto px-4 py-8 flex-1">
+        <div className="min-h-screen flex flex-col bg-[url('/background/background.jpg')] bg-cover bg-center">
+            <div className="absolute inset-0 backdrop-blur-md"></div>
+            <main className="container flex flex-col justify-center mx-auto px-4 py-8 flex-1 z-10">
                 <div className="flex justify-center gap-64">
                     <div>
-                        <Link href="\">
-                            <h1 className="text-6xl text-center font-bold mb-8">Step 1.</h1>
+                        <Link href="/">
+                            <h1 className="text-6xl text-white text-center font-bold mb-8">Step 1.</h1>
                         </Link>
                         <Image
                             src="/qr/sample_wifi_qr.png"
@@ -17,10 +18,10 @@ export default function QRPage() {
                             height={200}
                             className="mb-4"
                         />
-                        <p className="text-2xl text-center">Scan to connect to Wi-Fi</p>
+                        <p className="text-2xl text-center text-white">Scan to connect to Wi-Fi</p>
                     </div>
                     <div>
-                        <h1 className="text-6xl text-center font-bold mb-8">Step 2.</h1>
+                        <h1 className="text-6xl text-white text-center font-bold mb-8">Step 2.</h1>
                         <Image
                             src="/qr/sample_ctl_qr.png"
                             alt="Step 2"
@@ -28,7 +29,7 @@ export default function QRPage() {
                             height={200}
                             className="mb-4"
                         />
-                        <p className="text-2xl text-center">Scan to enjoy festival</p>
+                        <p className="text-2xl text-center text-white">Scan to enjoy festival</p>
                     </div>
                 </div>
             </main>

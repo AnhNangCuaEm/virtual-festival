@@ -246,11 +246,31 @@ export default function ControllerPage() {
 
       {/* Main content */}
       <main className="flex flex-col items-center justify-center w-full flex-1 px-6 text-center">
-      {/* Banner space */}
-      <div className="banner">
-        <h2>Welcome to the Joystick Controller</h2>
-        <p>Use the joystick to control your avatar in the virtual festival!</p>
-      </div>
+        {/* Banner space */}
+        <div className="banner">
+          <h2>Welcome to the Joystick Controller</h2>
+          <p>Use the joystick to control your avatar in the virtual festival!</p>
+          <Link href="/controller/zone_1">
+            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+              Zone1
+            </button>
+          </Link>
+          <Link href="/controller/zone_2">
+            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+              Zone2
+            </button>
+          </Link>
+          <Link href="/controller/zone_3">
+            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+              Zone3
+            </button>
+          </Link>
+          <Link href="/controller/zone_4">
+            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+              Zone4
+            </button>
+          </Link>
+        </div>
 
         {/* Real Joystick */}
         <div className="controller-container">
