@@ -18,7 +18,6 @@ export default function Page() {
   const [cameraInitialized, setCameraInitialized] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<string>("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -144,7 +143,8 @@ export default function Page() {
     ctx.scale(-1, 1);
 
     ctx.drawImage(video, 0, 0);
-    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+    // JPEG quality 0.6 để giảm kích thước file
+    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.6);
     setCapturedImage(imageDataUrl);
 
     // Reset transformation
@@ -176,10 +176,37 @@ export default function Page() {
     if (!capturedImage) return;
 
     setIsGenerating(true);
-    setSelectedStyle(style);
 
     try {
-      const base64Image = capturedImage.split(",")[1];
+      // Chuyển base64 thành blob để kiểm tra kích thước
+      let base64Image = capturedImage.split(",")[1];
+      const blobSize = Buffer.byteLength(base64Image, 'base64') / 1024; // KB
+      
+      console.log('[CLIENT] Image size:', blobSize.toFixed(2), 'KB');
+      
+      // Nếu ảnh quá lớn (> 500KB), nén thêm
+      if (blobSize > 500) {
+        console.log('[CLIENT] Image too large, compressing...');
+        const canvas = canvasRef.current;
+        if (canvas) {
+          // Tạo canvas mới nhỏ hơn
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            const scaleFactor = 0.7;
+            canvas.width = canvas.width * scaleFactor;
+            canvas.height = canvas.height * scaleFactor;
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            if (tempCtx) {
+              tempCanvas.width = Math.floor(canvas.width * scaleFactor);
+              tempCanvas.height = Math.floor(canvas.height * scaleFactor);
+              tempCtx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+              base64Image = tempCanvas.toDataURL("image/jpeg", 0.5).split(",")[1];
+            }
+          }
+        }
+      }
 
       const response = await fetch("/api/generate-kimono", {
         method: "POST",
@@ -476,7 +503,6 @@ export default function Page() {
                   setCurrentState("guide");
                   setGeneratedImage(null);
                   setCapturedImage(null);
-                  setSelectedStyle("");
                 }}
                 className="px-6 py-3 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-colors font-semibold"
               >
