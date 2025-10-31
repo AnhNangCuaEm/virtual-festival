@@ -347,23 +347,39 @@ export default function Zone4() {
           </div>
         ) : (
           !showStart && (
-            <div
-              ref={puzzleRef}
-              id="puzzle"
-              className="relative rounded-xl"
-              style={{
-                width: `${canvasSize.width}px`,
-                height: `${canvasSize.height}px`,
-                backgroundColor: 'rgba(128,128,128,0.5)',
-                border: '1px solid #3a3f4a'
-              }}
-            />
+            <>
+              {!isFinished && (
+                <div className="w-full bg-white/10 rounded-lg border border-white/20 px-4 py-3">
+                  <div 
+                    className="rounded"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      backgroundImage: `url(${imageList[level]})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      aspectRatio: '4/3'
+                    }}
+                  />
+                </div>
+              )}
+              <div
+                ref={puzzleRef}
+                id="puzzle"
+                className="relative rounded-xl"
+                style={{
+                  width: `${canvasSize.width}px`,
+                  height: `${canvasSize.height}px`,
+                  backgroundColor: 'rgba(128,128,128,0.5)',
+                  border: '1px solid #3a3f4a'
+                }}
+              />
+              <div className="text-md font-semibold text-white/90">
+                レベル：{Math.min(level + 1, imageList.length)} / {imageList.length}
+              </div>
+            </>
           )
         )}
-
-        <div className="text-md font-semibold text-white/90">
-          Stage：{Math.min(level + 1, imageList.length)} / {imageList.length}
-        </div>
       </main>
 
       {showNextPrompt && !isFinished && (
