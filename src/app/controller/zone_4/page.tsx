@@ -8,10 +8,8 @@ import Link from 'next/link';
 
 const imageList = [
   '/images/zone_4/zone_4_pz01.jpg',
-  '/images/zone_4/zone_4_pz02.jpg',
-  '/images/zone_4/zone_4_pz03.jpg',
   '/images/zone_4/zone_4_pz04.jpg',
-  '/images/zone_4/zone_4_pz05.jpg'
+  '/images/zone_4/zone_4_pz03.jpg'
 ];
 
 function formatTime(totalSeconds: number) {
@@ -40,15 +38,11 @@ export default function Zone4() {
   }, [level, showStart]);
 
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  
   useEffect(() => {
-    const updateSize = () => {
-      const width = Math.min(800, window.innerWidth - 32);
-      const height = Math.floor(width * 0.75);
-      setCanvasSize({ width, height });
-    };
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    const width = Math.min(800, window.innerWidth - 32);
+    const height = Math.floor(width * 0.75);
+    setCanvasSize({ width, height });
   }, []);
 
   useEffect(() => {
@@ -65,8 +59,8 @@ export default function Zone4() {
     container.innerHTML = '';
 
     const { width, height } = canvasSize;
-    const horiz = 5;
-    const vert = 4;
+    const horiz = 4;
+    const vert = 3;
 
     const pieceSize = Math.min(
       Math.floor(width / horiz),
@@ -163,6 +157,39 @@ export default function Zone4() {
         if (a) connectedRef.current.delete(a);
       });
 
+      // Add boundary constraint for dragged pieces
+      const stageObj = (canvas as unknown as { stage?: unknown }).stage;
+      if (stageObj) {
+        const stage = stageObj as { on: (event: string, handler: (e: unknown) => void) => void };
+        stage.on('dragmove', (e: unknown) => {
+          const evt = e as { target?: { x?: (val?: number) => number; y?: (val?: number) => number; width?: () => number; height?: () => number; getParent?: () => unknown } };
+          const target = evt.target;
+          if (!target || typeof target.x !== 'function' || typeof target.y !== 'function') return;
+
+          const margin = 150;
+          const x = target.x?.();
+          const y = target.y?.();
+          const w = target.width?.() || 0;
+          const h = target.height?.() || 0;
+
+          // Constrain x
+          if (x !== undefined && x > width + margin) {
+            target.x?.(width + margin);
+          }
+          if (x !== undefined && x + w < -margin) {
+            target.x?.(-margin - w);
+          }
+
+          // Constrain y
+          if (y !== undefined && y > height + margin) {
+            target.y?.(height + margin);
+          }
+          if (y !== undefined && y + h < -margin) {
+            target.y?.(-margin - h);
+          }
+        });
+      }
+
       canvas.attachSolvedValidator();
       canvas.onValid(() => {
         if (level < imageList.length - 1) {
@@ -175,10 +202,6 @@ export default function Zone4() {
         }
       });
     };
-
-    return () => {
-      container.innerHTML = '';
-    };
   }, [level, canvasSize, showNextPrompt, showStart]);
 
   const handleStart = () => {
@@ -190,6 +213,17 @@ export default function Zone4() {
     setShowNextPrompt(false);
     setLevel(prev => prev + 1);
   };
+
+  // Auto next level after 2 seconds when completed
+  useEffect(() => {
+    if (!showNextPrompt) return;
+
+    const timer = setTimeout(() => {
+      handleNextLevel();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [showNextPrompt]);
 
   const handleSkip = () => {
     const gained = connectedRef.current.size;
@@ -204,17 +238,6 @@ export default function Zone4() {
     }
   };
 
-  const handleRestart = () => {
-    setLevel(0);
-    setScore(0);
-    setTotalSeconds(0);
-    setIsFinished(false);
-    setShowNextPrompt(false);
-    setShowStart(true);
-    setTicking(false);
-    connectedRef.current = new Set();
-  };
-
   const startBg = imageList[level] ?? '';
 
   return (
@@ -225,7 +248,7 @@ export default function Zone4() {
         <MuteBtn />
       </div>
 
-      <main className="relative flex flex-col items-center justify-start w-full flex-1 px-4 text-center space-y-4">
+      <main className="relative flex flex-col items-center justify-center w-full flex-1 px-4 text-center space-y-4">
         {/* スタートページ */}
         {showStart && !isFinished && (
           <div
@@ -374,29 +397,6 @@ export default function Zone4() {
           )
         )}
       </main>
-
-      {showNextPrompt && !isFinished && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white p-5 rounded-2xl shadow-lg text-center max-w-[90%]">
-            <p className="mb-3 font-medium">完成！次へ進みますか？</p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => setShowNextPrompt(false)}
-                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800"
-              >
-                もう少し見る
-              </button>
-              <button
-                onClick={handleNextLevel}
-                className="px-4 py-2 rounded-lg text-[#1f2430]"
-                style={{ background: 'linear-gradient(180deg, #F7FF9E 0%, #E8FF57 100%)' }}
-              >
-                次へ
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

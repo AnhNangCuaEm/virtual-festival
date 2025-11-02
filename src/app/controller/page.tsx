@@ -235,41 +235,42 @@ export default function ControllerPage() {
     <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
       <Header />
       {/* Back and mute button */}
-      <div className="w-full h-16 flex items-center justify-between px-8">
-        <Link href="/controller">
-          <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-            Back
-          </button>
-        </Link>
+      <div className="w-full h-16 flex items-center justify-end px-8">
         <MuteBtn />
       </div>
 
       {/* Main content */}
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-6 text-center">
+      <main className="flex flex-col items-center justify-center gap-16 w-full flex-1 px-6 text-center">
         {/* Banner space */}
-        <div className="banner">
-          <h2>Welcome to the Joystick Controller</h2>
-          <p>Use the joystick to control your avatar in the virtual festival!</p>
-          <Link href="/controller/zone_1">
-            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-              Zone1
-            </button>
-          </Link>
-          <Link href="/controller/zone_2">
-            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-              Zone2
-            </button>
-          </Link>
-          <Link href="/controller/zone_3">
-            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-              Zone3
-            </button>
-          </Link>
-          <Link href="/controller/zone_4">
-            <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-              Zone4
-            </button>
-          </Link>
+        <div className="flex flex-col items-center mb-8 space-y-4">
+          <div className='absolute w-full text-2xl bg-theme-purple font-bold py-4'>
+            <h2>Welcome to the Joystick Controller</h2>
+          </div>
+          <div className="flex flex-col text-white items-center space-y-2 mt-24">
+          <p>下のジョイスティックを使って、祭りを楽しんでください！</p>
+          </div>
+          <div>
+            <Link href="/controller/zone_1">
+              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                Zone1
+              </button>
+            </Link>
+            <Link href="/controller/zone_2">
+              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                Zone2
+              </button>
+            </Link>
+            <Link href="/controller/zone_3">
+              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                Zone3
+              </button>
+            </Link>
+            <Link href="/controller/zone_4">
+              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                Zone4
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Real Joystick */}
@@ -285,8 +286,7 @@ export default function ControllerPage() {
                 ref={knobRef}
                 className="joystick-knob"
                 style={{
-                  transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                  backgroundColor: isDragging ? '#ff4444' : '#ff6666'
+                  transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`
                 }}
               >
               </div>
@@ -310,7 +310,7 @@ export default function ControllerPage() {
             <p><small>Position: ({Math.round(currentPlayer.x)}, {Math.round(currentPlayer.y)})</small></p>
           </div>
         )}
-        <div className="status-indicator">
+        <div className="status-indicator text-white">
           <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}></div>
           {isConnected ? '🟢 Connected to Festival' : '🔴 Connecting...'}
         </div>
@@ -329,7 +329,7 @@ export default function ControllerPage() {
           width: 200px;
           height: 200px;
           border-radius: 50%;
-          background: radial-gradient(circle, #f0f0f0 0%, #ddd 70%, #ccc 100%);
+          background: var(--color-theme-yellow);
           border: 3px solid #999;
           position: relative;
           cursor: pointer;
@@ -345,8 +345,7 @@ export default function ControllerPage() {
           width: 60px;
           height: 60px;
           border-radius: 50%;
-          background: #ff6666;
-          border: 2px solid #cc4444;
+          background: #242833;
           top: 50%;
           left: 50%;
           margin-top: -30px;

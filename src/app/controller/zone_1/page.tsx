@@ -3,6 +3,7 @@
 import Header from "@/components/layout/Header";
 import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -429,9 +430,10 @@ export default function Page() {
                 <button
                   onClick={captureImage}
                   disabled={!isCameraReady || isLoadingCamera}
-                  className="w-full py-3 px-6 bg-theme-yellow rounded-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center gap-2 py-3 px-6 bg-theme-yellow rounded-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  写真を撮る
+                  <Image src="/icons/camera.svg" width={24} height={24} alt="写真を撮る" />
+                  <span>写真を撮る</span>
                 </button>
               )}
             </div>

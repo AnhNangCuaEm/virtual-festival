@@ -14,7 +14,7 @@ export default function Home() {
               height={100}
               className='mb-8'
             />
-            <p className='font-semibold text-3xl text-center text-shadow'>ひとつの出会いが、心を通わせる物語になる。</p>=
+            <p className='font-semibold text-white text-3xl text-center text-shadow'>ひとつの出会いが、心を通わせる物語になる。</p>
           </div>
           <div>
             <div className="flex justify-center gap-10 mt-12">
