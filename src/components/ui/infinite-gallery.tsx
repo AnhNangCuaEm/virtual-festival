@@ -9,67 +9,62 @@ export const InfiniteGallery = ({
   direction = "left",
   speed = "normal",
   pauseOnHover = true,
+  stagger = false,
+  staggerAmount = 8,
   className,
 }: {
   images: string[];
   direction?: "left" | "right";
   speed?: "fast" | "normal" | "slow";
   pauseOnHover?: boolean;
+  stagger?: boolean;
+  staggerAmount?: number;
   className?: string;
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const scrollerRef = React.useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    addAnimation();
-  }, []);
-  
   const [start, setStart] = useState(false);
 
-  function addAnimation() {
+  // Duplicate items once on mount to create the infinite scroll effect
+  useEffect(() => {
     if (containerRef.current && scrollerRef.current) {
       const scrollerContent = Array.from(scrollerRef.current.children);
-
       scrollerContent.forEach((item) => {
         const duplicatedItem = item.cloneNode(true);
-        if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem);
-        }
+        scrollerRef.current!.appendChild(duplicatedItem);
       });
-
-      getDirection();
-      getSpeed();
       setStart(true);
     }
-  }
+  }, []);
 
-  const getDirection = () => {
-    if (containerRef.current) {
-      if (direction === "left") {
-        containerRef.current.style.setProperty(
-          "--animation-direction",
-          "forwards"
-        );
-      } else {
-        containerRef.current.style.setProperty(
-          "--animation-direction",
-          "reverse"
-        );
-      }
+  // Update direction via CSS variable
+  useEffect(() => {
+    if (!containerRef.current) return;
+    if (direction === "left") {
+      containerRef.current.style.setProperty(
+        "--animation-direction",
+        "forwards"
+      );
+    } else {
+      containerRef.current.style.setProperty(
+        "--animation-direction",
+        "reverse"
+      );
     }
-  };
+  }, [direction]);
 
-  const getSpeed = () => {
-    if (containerRef.current) {
-      if (speed === "fast") {
-        containerRef.current.style.setProperty("--animation-duration", "20s");
-      } else if (speed === "normal") {
-        containerRef.current.style.setProperty("--animation-duration", "40s");
-      } else {
-        containerRef.current.style.setProperty("--animation-duration", "80s");
-      }
+  // Update speed via CSS variable
+  useEffect(() => {
+    if (!containerRef.current) return;
+    if (speed === "fast") {
+      containerRef.current.style.setProperty("--animation-duration", "20s");
+    } else if (speed === "normal") {
+      containerRef.current.style.setProperty("--animation-duration", "40s");
+    } else {
+      containerRef.current.style.setProperty("--animation-duration", "80s");
     }
-  };
+  }, [speed]);
 
   return (
     <div
@@ -87,19 +82,27 @@ export const InfiniteGallery = ({
           pauseOnHover && "hover:[animation-play-state:paused]"
         )}
       >
-        {images.map((image, idx) => (
-          <li
-            key={`${image}-${idx}`}
-            className="relative aspect-[3/4] w-28 max-w-full shrink-0 rounded-lg border border-white/20 bg-gradient-to-br from-white/10 to-white/5 overflow-hidden"
-          >
-            <Image
-              src={image}
-              alt={`Gallery ${idx}`}
-              fill
-              className="object-cover"
-            />
-          </li>
-        ))}
+        {images.map((image, idx) => {
+          const offset = stagger
+            ? (idx % 2 === 0 ? -1 : 1) * Number(staggerAmount)
+            : 0;
+          return (
+            <li
+              key={`${image}-${idx}`}
+              className="relative aspect-[3/4] w-28 max-w-full shrink-0 rounded-lg border border-white/20 bg-gradient-to-br from-white/10 to-white/5 overflow-hidden"
+              style={
+                offset ? { transform: `translateY(${offset}px)` } : undefined
+              }
+            >
+              <Image
+                src={image}
+                alt={`Gallery ${idx}`}
+                fill
+                className="object-cover"
+              />
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
