@@ -6,25 +6,20 @@ import cors from 'cors';
 const app = express();
 const server = createServer(app);
 
-// CORS configuration
+// CORS configuration - Simple for development
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-  ],
-  credentials: true
+  origin: '*',
+  credentials: false
 }));
 
-// Socket.io configuration with CORS
+// Socket.io configuration - Simple for development
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000"
-    ],
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: false
+  },
+  transports: ['websocket', 'polling']
 });
 
 // In-memory storage for players
@@ -56,8 +51,11 @@ io.on('connection', (socket) => {
   
   let isPlayer = false; // Track if this connection is a player
   
-  // Handle role setting
-  socket.on('setRole', (role) => {
+  // Handle role setting with nickname
+  socket.on('setRole', (roleData) => {
+    const role = roleData.role || roleData; // Support both old and new format
+    const nickname = roleData.name || `Player ${players.size + 1}`; // Get nickname from roleData
+    
     if (role === 'player') {
       isPlayer = true;
       
@@ -65,14 +63,14 @@ io.on('connection', (socket) => {
       const playerId = generatePlayerId();
       const spawnPosition = getRandomSpawnPosition();
       
-      // Create new player only for controllers
+      // Create new player with nickname
       const newPlayer = {
         id: playerId,
         socketId: socket.id,
         x: spawnPosition.x,
         y: spawnPosition.y,
         color: `hsl(${Math.random() * 360}, 70%, 60%)`, // Random color
-        name: `Player ${players.size + 1}`,
+        name: nickname,
         connectedAt: new Date().toISOString()
       };
       
@@ -241,12 +239,13 @@ app.get('/status', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log('🎎 ===================================');
   console.log('🎎 Japonism Festival Server Started');
   console.log('🎎 ===================================');
-  console.log(`🔗 Server running on port ${PORT}`);
+  console.log(`🔗 Server running on port ${PORT} (all interfaces)`);
   console.log(`🌐 HTTP: http://localhost:${PORT}`);
+  console.log(`📱 Mobile: Find your IP and use http://YOUR_IP:${PORT}`);
   console.log(`⚡ Socket.io ready for connections`);
   console.log('🎎 ===================================');
 });

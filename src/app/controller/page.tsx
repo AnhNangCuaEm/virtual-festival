@@ -1,18 +1,10 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
 import Header from '@/components/layout/Header';
 import MuteBtn from '@/components/ui/MuteBtn';
 import Link from 'next/link';
-
-interface Player {
-  id: string;
-  x: number;
-  y: number;
-  color: string;
-  name: string;
-}
+import { useSocket } from '@/context/SocketContext';
 
 interface JoystickPosition {
   x: number;
@@ -21,11 +13,12 @@ interface JoystickPosition {
   angle: number;
 }
 
+type StateType = 'intro' | 'joystick';
+
 export default function ControllerPage() {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-  const [playerName, setPlayerName] = useState('');
+  const { socket, isConnected, currentPlayer, setNickname, isNicknameSet, setIsNicknameSet } = useSocket();
+  const [currentState, setCurrentState] = useState<StateType>('intro');
+  const [tempNickname, setTempNickname] = useState('');
 
   // Joystick state
   const [joystickPosition, setJoystickPosition] = useState<JoystickPosition>({ x: 0, y: 0, distance: 0, angle: 0 });
@@ -33,51 +26,27 @@ export default function ControllerPage() {
   const joystickRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
 
-  // Initialize socket connection
+  // Update state when nickname is set
   useEffect(() => {
-    // Get the current host and construct server URL
-    const getServerUrl = () => {
-      if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        // If accessing via IP, use that IP for server connection
-        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-          return `http://${hostname}:3001`;
-        }
-      }
-      return 'http://localhost:3001';
-    };
+    if (isNicknameSet && isConnected) {
+      setCurrentState('joystick');
+    }
+  }, [isNicknameSet, isConnected]);
 
-    const serverUrl = getServerUrl();
-    console.log('Connecting to server:', serverUrl);
+  // Handle nickname confirmation
+  const handleNicknameConfirm = useCallback(() => {
+    if (tempNickname.trim()) {
+      setNickname(tempNickname.trim());
+      setIsNicknameSet(true);
+    }
+  }, [tempNickname, setNickname, setIsNicknameSet]);
 
-    const newSocket = io(serverUrl, {
-      transports: ['websocket']
-    });
-
-    newSocket.on('connect', () => {
-      console.log('Controller connected to server successfully');
-      setIsConnected(true);
-      // Tell server this is a player controller
-      newSocket.emit('setRole', 'player');
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('Controller disconnected from server');
-      setIsConnected(false);
-    });
-
-    newSocket.on('playerData', (player: Player) => {
-      setCurrentPlayer(player);
-      setPlayerName(player.name);
-      console.log('Received player data:', player);
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.close();
-    };
-  }, []);
+  // Handle Enter key in nickname input
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleNicknameConfirm();
+    }
+  }, [handleNicknameConfirm]);
 
   // Send movement to server based on joystick position
   const sendMovement = useCallback((position: JoystickPosition) => {
@@ -224,13 +193,6 @@ export default function ControllerPage() {
     };
   }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
-  // Update player name
-  const updatePlayerName = useCallback(() => {
-    if (socket && isConnected && playerName.trim() && playerName !== currentPlayer?.name) {
-      socket.emit('updateName', playerName.trim());
-    }
-  }, [socket, isConnected, playerName, currentPlayer]);
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
       <Header />
@@ -241,59 +203,94 @@ export default function ControllerPage() {
 
       {/* Main content */}
       <main className="flex flex-col items-center justify-center gap-16 w-full flex-1 px-6 text-center">
-        {/* Banner space */}
-        <div className="flex flex-col items-center mb-8 space-y-4">
-          <div className='absolute w-full text-2xl bg-theme-purple font-bold py-4'>
-            <h2>Welcome to the Joystick Controller</h2>
-          </div>
-          <div className="flex flex-col text-white items-center space-y-2 mt-24">
-          <p>下のジョイスティックを使って、祭りを楽しんでください！</p>
-          </div>
-          <div>
-            <Link href="/controller/zone_1">
-              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-                Zone1
-              </button>
-            </Link>
-            <Link href="/controller/zone_2">
-              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-                Zone2
-              </button>
-            </Link>
-            <Link href="/controller/zone_3">
-              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-                Zone3
-              </button>
-            </Link>
-            <Link href="/controller/zone_4">
-              <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
-                Zone4
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Real Joystick */}
-        <div className="controller-container">
-          <div className="joystick-wrapper">
-            <div
-              ref={joystickRef}
-              className="joystick-base"
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleTouchStart}
-            >
-              <div
-                ref={knobRef}
-                className="joystick-knob"
-                style={{
-                  transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`
-                }}
+        {/* INTRO STATE */}
+        {currentState === 'intro' && (
+          <div className="flex flex-col items-center justify-center space-y-8 w-full max-w-md">
+            <div className='space-y-4 p-8 bg-theme-purple rounded-2xl'>
+              <h1 className='text-4xl font-bold text-white'>ニックネームを入力</h1>
+              <p className='text-lg text-gray-100'>祭りを楽しむためのニックネームを入力してください</p>
+            </div>
+            
+            <div className='w-full space-y-4'>
+              <input
+                type='text'
+                value={tempNickname}
+                onChange={(e) => setTempNickname(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder='ニックネームを入力...'
+                maxLength={20}
+                className='w-full px-6 py-4 text-lg text-white rounded-lg border-2 border-theme-purple focus:outline-none focus:border-theme-yellow'
+                autoFocus
+              />
+              <button
+                onClick={handleNicknameConfirm}
+                disabled={!tempNickname.trim()}
+                className='w-full px-6 py-3 bg-theme-yellow text-black font-bold text-lg rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors'
               >
-              </div>
+                入場する
+              </button>
             </div>
           </div>
+        )}
 
-        </div>
+        {/* JOYSTICK STATE */}
+        {currentState === 'joystick' && (
+          <>
+            {/* Banner space */}
+            <div className="flex flex-col items-center mb-8 space-y-4">
+              <div className='absolute w-full text-2xl bg-theme-purple font-bold py-4'>
+                <h2>Welcome to the Joystick Controller</h2>
+              </div>
+              <div className="flex flex-col text-white items-center space-y-2 mt-24">
+              <p>下のジョイスティックを使って、祭りを楽しんでください！</p>
+              </div>
+              <div>
+                <Link href="/controller/zone_1">
+                  <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                    Zone1
+                  </button>
+                </Link>
+                <Link href="/controller/zone_2">
+                  <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                    Zone2
+                  </button>
+                </Link>
+                <Link href="/controller/zone_3">
+                  <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                    Zone3
+                  </button>
+                </Link>
+                <Link href="/controller/zone_4">
+                  <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                    Zone4
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Real Joystick */}
+            <div className="controller-container">
+              <div className="joystick-wrapper">
+                <div
+                  ref={joystickRef}
+                  className="joystick-base"
+                  onMouseDown={handleMouseDown}
+                  onTouchStart={handleTouchStart}
+                >
+                  <div
+                    ref={knobRef}
+                    className="joystick-knob"
+                    style={{
+                      transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`
+                    }}
+                  >
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </>
+        )}
       </main>
       {/* Connection Status */}
       <div className="text-center mb-4">
