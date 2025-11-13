@@ -329,13 +329,18 @@ export default function Page() {
               </div>
               <div className="flex gap-4">
                 <div
-                  className={`w-24 px-4 py-2 rounded-lg font-bold ${
-                    miniTimer <= 5
-                      ? "bg-red-400/60 text-white"
-                      : "bg-theme-purple/80 text-white"
-                  }`}
+                  className={`flex gap-2 px-4 py-2 rounded-lg font-bold ${miniTimer <= 5
+                    ? "bg-red-400/60 text-white"
+                    : "bg-theme-purple/80 text-white"
+                    }`}
                 >
-                  ⏱️ {miniTimer}秒
+                  <Image
+                    src="/icons/time.svg"
+                    alt="Mini Timer Icon"
+                    width={24}
+                    height={24}
+                  />
+                  {miniTimer}秒
                 </div>
               </div>
             </div>
@@ -411,30 +416,27 @@ export default function Page() {
                 const isTimeout = isAnswered && !selectedAnswer;
 
                 let buttonClass =
-                  "p-6 border-2 bg-theme-yellow rounded-lg font-semibold transition-all";
+                  "p-6 border-4 bg-theme-yellow rounded-lg font-semibold transition-all";
 
                 if (!showResult) {
-                  if (hasPlayedAudio) {
-                    buttonClass +=
-                      "border-gray-300 hover:border-violet-500 cursor-pointer";
-                  } else {
-                    buttonClass +=
-                      "border-gray-300 opacity-50 cursor-not-allowed";
-                  }
+                  buttonClass += "";
                 } else if (isTimeout) {
+                  // Timeout: only highlight correct answer
                   if (isCorrect) {
-                    buttonClass += "border-green-500 text-green-700";
+                    buttonClass += " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
                   } else {
-                    buttonClass += "border-gray-300 opacity-50";
+                    buttonClass += " border-gray-400 bg-gray-100 text-gray-500 opacity-40";
                   }
                 } else if (isSelected) {
-                  buttonClass += isCorrect
-                    ? "border-green-500 text-green-700"
-                    : "border-red-500 text-red-700";
+                  if (isCorrect) {
+                    buttonClass += " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
+                  } else {
+                    buttonClass += " border-red-500 bg-red-100 text-red-700 shadow-lg shadow-red-500/50";
+                  }
                 } else if (isCorrect) {
-                  buttonClass += "border-green-500 text-green-700";
+                  buttonClass += " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
                 } else {
-                  buttonClass += "border-gray-300 opacity-50";
+                  buttonClass += " border-gray-400 bg-gray-100 text-gray-500 opacity-40";
                 }
 
                 return (
@@ -565,4 +567,3 @@ export default function Page() {
     </div>
   );
 }
- 

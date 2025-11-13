@@ -206,12 +206,14 @@ export default function ControllerPage() {
         {/* INTRO STATE */}
         {currentState === 'intro' && (
           <div className="flex flex-col items-center justify-center space-y-8 w-full max-w-md">
-            <div className='space-y-4 p-8 bg-theme-purple rounded-2xl'>
-              <h1 className='text-4xl font-bold text-white'>ニックネームを入力</h1>
-              <p className='text-lg text-gray-100'>祭りを楽しむためのニックネームを入力してください</p>
+            <div className='absolute w-full top-48'>
+              <div className="flex flex-col items-center">
+                <h1 className='w-full text-2xl bg-theme-purple font-bold py-4'>Welcome to <br />  Virtual Festival</h1>
+                <p className='w-full text-lg bg-theme-yellow py-2'>祭りを楽しむためのニックネームを入力してください</p>
+              </div>
             </div>
-            
-            <div className='w-full space-y-4'>
+
+            <div className='w-full space-y-4 mt-48'>
               <input
                 type='text'
                 value={tempNickname}
@@ -225,9 +227,9 @@ export default function ControllerPage() {
               <button
                 onClick={handleNicknameConfirm}
                 disabled={!tempNickname.trim()}
-                className='w-full px-6 py-3 bg-theme-yellow text-black font-bold text-lg rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors'
+                className='w-fit px-8 py-10 bg-gradient-to-tr from-[#2E3D54] from-60% to-[#4a6590] text-theme-yellow font-bold text-2xl rounded-full border-1 border-theme-purple'
               >
-                入場する
+                入場
               </button>
             </div>
           </div>
@@ -238,13 +240,10 @@ export default function ControllerPage() {
           <>
             {/* Banner space */}
             <div className="flex flex-col items-center mb-8 space-y-4">
-              <div className='absolute w-full text-2xl bg-theme-purple font-bold py-4'>
-                <h2>Welcome to the Joystick Controller</h2>
+              <div className='absolute w-full text-xl bg-theme-purple py-4'>
+                <h2>ジョイスティックを使って、祭りを楽しもう！</h2>
               </div>
-              <div className="flex flex-col text-white items-center space-y-2 mt-24">
-              <p>下のジョイスティックを使って、祭りを楽しんでください！</p>
-              </div>
-              <div>
+              <div className='absolute bottom-32 w-full flex justify-center gap-4'>
                 <Link href="/controller/zone_1">
                   <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
                     Zone1

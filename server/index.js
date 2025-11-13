@@ -220,7 +220,7 @@ io.on('connection', (socket) => {
 // HTTP routes
 app.get('/', (req, res) => {
   res.json({
-    message: '🎎 Japonism Festival Server',
+    message: '🎎 Virtual Festival Server',
     status: 'running',
     players: Object.keys(gameState.players).length,
     uptime: process.uptime()
@@ -240,14 +240,14 @@ app.get('/status', (req, res) => {
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log('🎎 ===================================');
-  console.log('🎎 Japonism Festival Server Started');
-  console.log('🎎 ===================================');
+  console.log('===================================');
+  console.log('Virtual Festival Server Started');
+  console.log('===================================');
   console.log(`🔗 Server running on port ${PORT} (all interfaces)`);
   console.log(`🌐 HTTP: http://localhost:${PORT}`);
   console.log(`📱 Mobile: Find your IP and use http://YOUR_IP:${PORT}`);
   console.log(`⚡ Socket.io ready for connections`);
-  console.log('🎎 ===================================');
+  console.log('===================================');
 });
 
 // Graceful shutdown
