@@ -264,6 +264,11 @@ export default function ControllerPage() {
                     Zone4
                   </button>
                 </Link>
+                <Link href="/controller/zone_5">
+                  <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                    Zone5
+                  </button>
+                </Link>
               </div>
             </div>
 
