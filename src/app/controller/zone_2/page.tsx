@@ -2,7 +2,7 @@
 // this is quiz games page
 
 import Header from "@/components/layout/Header";
-import MuteBtn from "@/components/ui/MuteBtn";
+// import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
 import Link from "next/link";
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -454,7 +454,7 @@ export default function Page() {
       {/* Back and mute button */}
       <div className="w-full h-16 flex items-center justify-between px-8">
         <BackBtn />
-        <MuteBtn />
+        {/* <MuteBtn /> */}
       </div>
       {/* Main content */}
       <main className="flex flex-col items-center justify-center w-full flex-1 px-8 text-center">

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import Phaser from "phaser";
 import Header from "@/components/layout/Header";
-import MuteBtn from "@/components/ui/MuteBtn";
+// import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -655,7 +655,7 @@ export default function NattoGamePage() {
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-8">
         <BackBtn />
-        <MuteBtn />
+        {/* <MuteBtn /> */}
       </div>
       {/* Game UI - visible during playing state */}
       {gameState === "playing" && (

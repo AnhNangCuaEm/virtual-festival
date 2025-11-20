@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as headbreaker from 'headbreaker';
 import Header from '@/components/layout/Header';
-import MuteBtn from '@/components/ui/MuteBtn';
+// import MuteBtn from '@/components/ui/MuteBtn';
 import BackBtn from '@/components/ui/BackBtn';
 import Link from 'next/link';
 
@@ -245,7 +245,7 @@ export default function Zone4() {
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-4">
         <BackBtn />
-        <MuteBtn />
+        {/* <MuteBtn /> */}
       </div>
 
       <main className="relative flex flex-col items-center justify-center w-full flex-1 px-4 text-center space-y-4">

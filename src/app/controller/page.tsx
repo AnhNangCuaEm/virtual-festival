@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Header from '@/components/layout/Header';
-import MuteBtn from '@/components/ui/MuteBtn';
 import Link from 'next/link';
 import { useSocket } from '@/context/SocketContext';
 
@@ -196,10 +195,6 @@ export default function ControllerPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2 backdrop-blur-sm">
       <Header />
-      {/* Back and mute button */}
-      <div className="w-full h-16 flex items-center justify-end px-8">
-        <MuteBtn />
-      </div>
 
       {/* Main content */}
       <main className="flex flex-col items-center justify-center gap-16 w-full flex-1 px-6 text-center">
@@ -243,7 +238,7 @@ export default function ControllerPage() {
               <div className='absolute w-full text-xl bg-theme-purple py-4'>
                 <h2>ジョイスティックを使って、祭りを楽しもう！</h2>
               </div>
-              <div className='absolute bottom-32 w-full flex justify-center gap-4'>
+              <div className='absolute bottom-32 w-full flex justify-center flex-wrap gap-4'>
                 <Link href="/controller/zone_1">
                   <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
                     Zone1
@@ -267,6 +262,11 @@ export default function ControllerPage() {
                 <Link href="/controller/zone_5">
                   <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
                     Zone5
+                  </button>
+                </Link>
+                <Link href="/controller/zone_6">
+                  <button className="p-2 px-6 bg-gray-200/80 rounded-lg text-black font-semibold">
+                    Zone6
                   </button>
                 </Link>
               </div>

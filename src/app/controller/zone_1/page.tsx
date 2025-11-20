@@ -1,7 +1,7 @@
 "use client";
 
 import Header from "@/components/layout/Header";
-import MuteBtn from "@/components/ui/MuteBtn";
+// import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
@@ -206,18 +206,18 @@ export default function Page() {
     setIsGenerating(true);
 
     try {
-      // Chuyển base64 thành blob để kiểm tra kích thước
+      // Convert base64 to Blob and check size
       let base64Image = capturedImage.split(",")[1];
       const blobSize = Buffer.byteLength(base64Image, 'base64') / 1024; // KB
 
       console.log('[CLIENT] Image size:', blobSize.toFixed(2), 'KB');
 
-      // Nếu ảnh quá lớn (> 500KB), nén thêm
+      // If image > 500KB, compress further using canvas
       if (blobSize > 500) {
         console.log('[CLIENT] Image too large, compressing...');
         const canvas = canvasRef.current;
         if (canvas) {
-          // Tạo canvas mới nhỏ hơn
+          // Create a new smaller canvas
           const ctx = canvas.getContext("2d");
           if (ctx) {
             const scaleFactor = 0.7;
@@ -556,7 +556,7 @@ export default function Page() {
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-8">
         <BackBtn />
-        <MuteBtn />
+        {/* <MuteBtn /> */}
       </div>
       {/* Main content */}
       <main className="flex flex-col items-center justify-center px-8 w-full flex-1 text-center">
