@@ -13,11 +13,15 @@ export default function BackBtn() {
     setShowConfirm(true);
   };
 
-  const confirmBack = () => {
+  const confirmBack = (e?: React.MouseEvent | React.TouchEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     router.push("/controller");
   };
 
-  const cancelBack = () => {
+  const cancelBack = (e?: React.MouseEvent | React.TouchEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setShowConfirm(false);
   };
 
@@ -28,8 +32,14 @@ export default function BackBtn() {
       </button>
 
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-8 max-w-sm shadow-2xl">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={cancelBack}
+        >
+          <div
+            className="bg-white rounded-3xl p-8 max-w-sm shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-2xl font-bold mb-4 text-black">
               体験を終了しますか?
             </h2>
@@ -39,13 +49,15 @@ export default function BackBtn() {
             <div className="flex gap-4">
               <button
                 onClick={cancelBack}
-                className="flex-1 px-6 py-3 bg-gray-300 text-black rounded-full font-semibold"
+                onTouchEnd={cancelBack}
+                className="flex-1 px-6 py-3 bg-gray-300 text-black rounded-full font-semibold select-none active:scale-95 transition-transform"
               >
                 キャンセル
               </button>
               <button
                 onClick={confirmBack}
-                className="flex-1 px-6 py-3 bg-theme-yellow text-black rounded-full font-semibold"
+                onTouchEnd={confirmBack}
+                className="flex-1 px-6 py-3 bg-theme-yellow text-black rounded-full font-semibold select-none active:scale-95 transition-transform"
               >
                 終了
               </button>
