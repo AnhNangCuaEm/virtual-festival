@@ -1,11 +1,18 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import Phaser from "phaser";
 import Header from "@/components/layout/Header";
-// import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Dynamically import Phaser only on client side
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Phaser: any = null;
+if (typeof window !== "undefined") {
+  import("phaser").then((module) => {
+    Phaser = module.default;
+  });
+}
 
 type GameState = "description" | "playing" | "result";
 
@@ -69,17 +76,8 @@ export default function NattoGamePage() {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            // Game over
             setGameState("result");
             if (timerRef.current) clearInterval(timerRef.current);
-
-            if (socket) {
-              socket.emit("gameScore", {
-                zone: "zone_6",
-                game: "納豆混ぜゲーム",
-                score: score,
-              });
-            }
 
             if (socket) {
               socket.emit("gameScore", {
@@ -95,7 +93,6 @@ export default function NattoGamePage() {
       }, 1000);
     }
 
-    // Cleanup when game ends
     return () => {
       if (gameState !== "playing" && timerRef.current) {
         clearInterval(timerRef.current);
@@ -105,10 +102,8 @@ export default function NattoGamePage() {
     };
   }, [gameState, hasMixingStarted, score, socket]);
 
-  // Separate effect to watch for mixing start
   useEffect(() => {
     if (gameState === "playing" && hasMixingStarted && !timerStarted.current) {
-      // Force re-run of timer effect
       setScore((prev) => prev);
     }
   }, [hasMixingStarted, gameState]);
@@ -118,6 +113,7 @@ export default function NattoGamePage() {
     if (
       !gameContainerRef.current ||
       typeof window === "undefined" ||
+      !Phaser ||
       gameState !== "playing"
     )
       return;
@@ -136,6 +132,8 @@ export default function NattoGamePage() {
       private mixingQualitySmoothed = 0;
       private graphics: Phaser.GameObjects.Graphics | null = null;
       private bowlGraphics: Phaser.GameObjects.Graphics | null = null;
+      private particles: Phaser.GameObjects.Particles.ParticleEmitter | null =
+        null;
       private bowlRadius = 0;
       private centerX = 0;
       private centerY = 0;
@@ -151,10 +149,8 @@ export default function NattoGamePage() {
       create() {
         const { width, height } = this.cameras.main;
         this.centerX = width / 2;
-        this.centerY = height / 2;
+        this.centerY = width < 768 ? height * 0.65 - 80 : height / 2;
         this.bowlRadius = 150;
-
-        this.matter.world.setBounds(0, 0, width, height);
 
         this.bowlGraphics = this.add.graphics();
         if (this.bowlGraphics) {
@@ -165,15 +161,38 @@ export default function NattoGamePage() {
         this.graphics = this.add.graphics();
         this.scale.on("resize", this.handleResize, this);
 
-        // Create circular boundary
-        const segments = 24;
+        this.input.setTopOnly(false);
+
+        // Create simple particle texture
+        const particleTexture = this.add.graphics();
+        particleTexture.fillStyle(0xffffff);
+        particleTexture.fillCircle(2, 2, 2);
+        particleTexture.generateTexture("simpleParticle", 4, 4);
+        particleTexture.destroy();
+
+        // Create particle system for mixing effects
+        this.particles = this.add.particles(0, 0, "simpleParticle", {
+          lifespan: 600,
+          speed: { min: 30, max: 80 },
+          scale: { start: 0.8, end: 0 },
+          alpha: { start: 0.7, end: 0 },
+          gravityY: 50,
+          emitting: false,
+        });
+        if (this.particles) {
+          this.particles.setDepth(5);
+        }
+
+        // Create circular boundary (matches visual bowl)
+        const segments = 32;
+        const boundaryRadius = this.bowlRadius - 2; // Just slightly inside visual bowl
         for (let i = 0; i < segments; i++) {
           const angle1 = (i / segments) * Math.PI * 2;
           const angle2 = ((i + 1) / segments) * Math.PI * 2;
-          const x1 = this.centerX + Math.cos(angle1) * this.bowlRadius;
-          const y1 = this.centerY + Math.sin(angle1) * this.bowlRadius;
-          const x2 = this.centerX + Math.cos(angle2) * this.bowlRadius;
-          const y2 = this.centerY + Math.sin(angle2) * this.bowlRadius;
+          const x1 = this.centerX + Math.cos(angle1) * boundaryRadius;
+          const y1 = this.centerY + Math.sin(angle1) * boundaryRadius;
+          const x2 = this.centerX + Math.cos(angle2) * boundaryRadius;
+          const y2 = this.centerY + Math.sin(angle2) * boundaryRadius;
 
           const wall = this.matter.add.rectangle(
             (x1 + x2) / 2,
@@ -209,7 +228,9 @@ export default function NattoGamePage() {
           this.beans.push(bean as unknown as Phaser.Physics.Matter.Image);
         }
 
-        this.pointer = this.input.activePointer;
+        this.pointer = this.input.pointer1;
+        this.lastPointerPos = { x: this.centerX, y: this.centerY };
+        this.lastAngle = 0;
       }
 
       drawBowl() {
@@ -236,15 +257,21 @@ export default function NattoGamePage() {
 
       handleResize(gameSize: { width: number; height: number }) {
         this.centerX = gameSize.width / 2;
-        this.centerY = gameSize.height / 2;
+        // Move center up by 30 pixels on mobile to allow beans to reach top
+        this.centerY =
+          gameSize.width < 768
+            ? gameSize.height * 0.6 - 30
+            : gameSize.height / 2;
         if (this.bowlGraphics) {
           this.bowlGraphics.clear();
           this.drawBowl();
         }
-        this.matter.world.setBounds(0, 0, gameSize.width, gameSize.height);
       }
 
       update() {
+        this.pointer = this.input.pointer1.isDown
+          ? this.input.pointer1
+          : this.input.activePointer;
         if (!this.pointer) return;
 
         const dx = this.pointer.x - this.lastPointerPos.x;
@@ -257,44 +284,44 @@ export default function NattoGamePage() {
         );
 
         if (this.pointer.isDown) {
-          // Start timer on first mixing
-          if (!hasMixingStarted && this.pointerSpeed > 1) {
+          if (!hasMixingStarted) {
             this.onMixingStart?.();
           }
 
-          if (this.lastPointerPos.x !== 0 || this.lastPointerPos.y !== 0) {
-            let deltaAngle = currentPointerAngle - this.lastAngle;
-            if (deltaAngle > Math.PI) deltaAngle -= Math.PI * 2;
-            if (deltaAngle < -Math.PI) deltaAngle += Math.PI * 2;
-            this.totalRotation += deltaAngle;
-          }
+          let deltaAngle = currentPointerAngle - this.lastAngle;
+          if (deltaAngle > Math.PI) deltaAngle -= Math.PI * 2;
+          if (deltaAngle < -Math.PI) deltaAngle += Math.PI * 2;
+          this.totalRotation += deltaAngle;
           this.lastAngle = currentPointerAngle;
         }
 
         this.lastPointerPos = { x: this.pointer.x, y: this.pointer.y };
 
-        // Calculate instant mixing quality based on pointer speed
         if (this.pointer.isDown && this.pointerSpeed > 1) {
-          // Quality increases with speed, max at speed 40+ (increased threshold)
           this.instantMixingQuality = Math.min(
             100,
             (this.pointerSpeed / 60) * 100
           );
         } else {
-          // Quality decreases when not mixing
           this.instantMixingQuality = Math.max(
             0,
             this.instantMixingQuality - 10
           );
         }
 
-        // Smooth the quality display for better UX
         const smoothingFactor = 0.1;
         this.mixingQualitySmoothed =
           this.mixingQualitySmoothed * (1 - smoothingFactor) +
           this.instantMixingQuality * smoothingFactor;
 
-        // Apply forces to beans
+        if (this.particles && this.pointer!.isDown && this.pointerSpeed > 25) {
+          const emitX =
+            this.centerX + (Math.random() - 0.5) * this.bowlRadius * 0.8;
+          const emitY =
+            this.centerY + (Math.random() - 0.5) * this.bowlRadius * 0.8;
+          this.particles.emitParticleAt(emitX, emitY);
+        }
+
         this.beans.forEach((bean) => {
           const body = bean as unknown as MatterJS.BodyType;
           const bx = body.position.x;
@@ -305,8 +332,15 @@ export default function NattoGamePage() {
               by - this.centerY,
               bx - this.centerX
             );
-            const tangentAngle = beanAngleFromCenter - Math.PI / 2;
-            const rotationForce = this.pointerSpeed * 0.000005;
+
+            const crossProduct =
+              dx * (this.pointer!.y - this.centerY) -
+              dy * (this.pointer!.x - this.centerX);
+            const rotationDirection = -Math.sign(crossProduct);
+
+            const tangentAngle =
+              beanAngleFromCenter + (Math.PI / 2) * rotationDirection;
+            const rotationForce = this.pointerSpeed * 0.000009;
 
             this.matter.applyForce(body, {
               x: Math.cos(tangentAngle) * rotationForce,
@@ -333,12 +367,10 @@ export default function NattoGamePage() {
                 y: Math.sin(angle) * force,
               });
 
-              // Slow down mixing progress by 4x (0.0015 -> 0.000375)
               this.mixingProgress += influence * this.pointerSpeed * 0.000375;
             }
           }
 
-          // Boundary check
           const distFromCenter = Phaser.Math.Distance.Between(
             bx,
             by,
@@ -371,7 +403,6 @@ export default function NattoGamePage() {
           }
         });
 
-        // Redraw
         if (this.graphics) {
           this.graphics.clear();
           this.graphics.setDepth(0);
@@ -560,7 +591,10 @@ export default function NattoGamePage() {
           this.graphics.setAlpha(1);
         }
 
-        // Update React state
+        if (this.mixingQualitySmoothed > 85) {
+          this.cameras.main.shake(200, 0.005);
+        }
+
         const totalDegrees = Math.abs((this.totalRotation * 180) / Math.PI);
         const completeRotations = Math.floor(totalDegrees / 360);
         const newScore = completeRotations * 10;
@@ -595,6 +629,12 @@ export default function NattoGamePage() {
         pixelArt: false,
         antialias: false,
         roundPixels: true,
+      },
+      input: {
+        activePointers: 1,
+        touch: {
+          capture: true,
+        },
       },
     };
 
@@ -637,7 +677,7 @@ export default function NattoGamePage() {
   useEffect(() => {
     if (gameState !== "result") {
       setScore(0);
-      setTimeLeft(20);
+      setTimeLeft(30);
       setMixingQuality(0);
       setHasMixingStarted(false);
       timerStarted.current = false;
@@ -653,23 +693,20 @@ export default function NattoGamePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Header />
-      <div className="w-full h-16 flex items-center justify-between px-8">
+      <div className="w-full h-16 flex items-center justify-between px-8 relative z-50">
         <BackBtn />
-        {/* <MuteBtn /> */}
       </div>
-      {/* Game UI - visible during playing state */}
       {gameState === "playing" && (
-        <div className="w-full h-16 flex items-center justify-between px-8 mt-4">
-          <div className="px-4 py-2 bg-theme-purple text-white rounded-full font-semibold text-sm">
+        <div className="w-full h-16 flex items-center justify-between px-8 mt-4 relative z-50 pointer-events-none">
+          <div className="px-4 py-2 bg-theme-purple text-white rounded-full font-semibold text-sm pointer-events-auto">
             スコア: {score}
           </div>
-          <div className="px-4 py-2 bg-theme-purple text-white rounded-full font-semibold text-sm">
+          <div className="px-4 py-2 bg-theme-purple text-white rounded-full font-semibold text-sm pointer-events-auto">
             時間: {timeLeft}s
           </div>
         </div>
       )}
 
-      {/* Main content */}
       <main className="flex flex-col items-center justify-center px-8 w-full flex-1 text-center">
         <AnimatePresence mode="wait">
           {gameState === "description" && (
@@ -744,13 +781,17 @@ export default function NattoGamePage() {
             exit="exit"
             className="fixed inset-0 z-40"
           >
+            {/* Phaser Game Container */}
+            <div
+              ref={gameContainerRef}
+              className="w-full h-full touch-none"
+              style={{ touchAction: "none" }}
+            />
+
             {/* Game UI */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 px-4 py-2 bg-theme-purple text-white rounded-full font-semibold text-sm">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-theme-purple text-white rounded-full font-semibold text-sm pointer-events-none">
               混ぜ具合: {mixingQuality}%
             </div>
-
-            {/* Phaser Game Container */}
-            <div ref={gameContainerRef} className="w-full h-full" />
           </motion.div>
         )}
       </AnimatePresence>
