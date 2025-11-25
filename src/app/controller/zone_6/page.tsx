@@ -719,22 +719,22 @@ export default function NattoGamePage() {
               transition={{ duration: 0.3 }}
               className="flex flex-col items-center space-y-6"
             >
-              <div className="space-y-4 p-6 bg-theme-purple rounded-2xl">
-                <h1 className="text-2xl font-bold">description</h1>
+              <div className="space-y-4 p-6 bg-theme-purple rounded-3xl">
+                <h1 className="text-2xl font-bold mb-4">納豆を混ぜ</h1>
                 <p className="text-lg text-gray-900 font-bold leading-relaxed">
-                  指で円を描いてぐるぐる
+                  指で円を描いて納豆をかき混ぜよう！
                   <br />
-                  して納豆を混ぜる
+                  制限時間内に速く
                   <br />
+                  均等に混ぜるほど
                   <br />
-                  混ぜ具合でポイントゲット
-                  <br />
+                  ポイントが増えます
                   <br />
                 </p>
               </div>
               <button
                 onClick={startGame}
-                className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
+                className="px-8 py-3 bg-theme-yellow rounded-full font-semibold active:scale-95 transition-transform"
               >
                 始める
               </button>

@@ -1,7 +1,6 @@
 "use client";
 
 import Header from "@/components/layout/Header";
-// import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
@@ -287,7 +286,7 @@ export default function Page() {
                 setCurrentState("preview");
                 setCameraInitialized(false);
               }}
-              className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
+              className="px-8 py-3 bg-theme-yellow rounded-full font-semibold active:scale-95 transition-transform"
             >
               始める
             </button>
@@ -556,7 +555,6 @@ export default function Page() {
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-8">
         <BackBtn />
-        {/* <MuteBtn /> */}
       </div>
       {/* Main content */}
       <main className="flex flex-col items-center justify-center px-8 w-full flex-1 text-center">

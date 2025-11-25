@@ -1,7 +1,6 @@
 "use client";
 
 import Header from "@/components/layout/Header";
-// import MuteBtn from "@/components/ui/MuteBtn";
 import BackBtn from "@/components/ui/BackBtn";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
@@ -102,17 +101,20 @@ export default function Page() {
                     >
                         <div className="space-y-4 p-6 bg-theme-purple rounded-3xl">
                             <h1 className="text-4xl font-bold mb-4">{storyData?.metadata.title}</h1>
-                            <p className="text-lg text-gray-600 mb-8 max-w-2xl">
+                            <p className="text-lg font-semibold text-gray-800 mb-8 max-w-2xl">
                                 小鹿との出会いを体験してください。あなたの選択が物語を決めます。
                             </p>
-                            <div className="flex gap-4 justify-center text-sm text-gray-600">
-                                <span>🎬 ビデオ: {storyData?.metadata.videoCount}</span>
-                                <span>🎭 エンディング: {storyData?.metadata.endings.length}</span>
+                            <p className="text-md italic text-gray-800 max-w-2xl">
+                                * ヘッドホンまたはイヤホンを使用して、より没入感のある体験をお楽しみください。*
+                            </p>
+                            <div className="flex gap-4 justify-center text-sm text-gray-800">
+                                <span>ビデオ: {storyData?.metadata.videoCount}</span>
+                                <span>エンディング: {storyData?.metadata.endings.length}</span>
                             </div>
                         </div>
                         <button
                             onClick={startGame}
-                            className="px-12 py-4 bg-theme-yellow text-black rounded-full font-bold text-xl"
+                            className="px-8 py-3 bg-theme-yellow rounded-full font-semibold active:scale-95 transition-transform"
                         >
                             ゲームを始める
                         </button>
@@ -146,6 +148,7 @@ export default function Page() {
                                 <motion.video
                                     key={videoKey}
                                     src={`/${currentNode.video}`}
+                                    playsInline
                                     autoPlay
                                     onEnded={handleVideoEnd}
                                     className="w-full h-full object-cover"
@@ -245,7 +248,6 @@ export default function Page() {
             {/* Back and mute button */}
             <div className="w-full h-16 flex items-center justify-between px-8">
                 <BackBtn />
-                {/* <MuteBtn /> */}
             </div>
             {/* Main content */}
             <main className="flex flex-col items-center justify-center w-full flex-1 px-8 text-center">

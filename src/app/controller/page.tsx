@@ -222,7 +222,7 @@ export default function ControllerPage() {
               <button
                 onClick={handleNicknameConfirm}
                 disabled={!tempNickname.trim()}
-                className='w-fit px-8 py-10 bg-gradient-to-tr from-[#2E3D54] from-60% to-[#4a6590] text-theme-yellow font-bold text-2xl rounded-full border-1 border-theme-purple'
+                className='w-fit px-8 py-10 bg-gradient-to-tr from-[#2E3D54] from-60% to-[#4a6590] text-theme-yellow font-bold text-2xl rounded-full border-1 border-theme-purple active:scale-95 transition-transform'
               >
                 入場
               </button>
