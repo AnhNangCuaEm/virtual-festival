@@ -1,9 +1,18 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import * as Phaser from 'phaser';
-import { io, Socket } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
+
+interface MapBounds {
+  centerX: number;
+  centerY: number;
+  mapWidth: number;
+  mapHeight: number;
+  tileWidth: number;
+  tileHeight: number;
+  scale: number;
+}
 
 interface Player {
   id: string;
@@ -19,21 +28,26 @@ class VenueScene extends Phaser.Scene {
   private currentPlayer: Player | null = null;
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   private mapInstance: Phaser.Tilemaps.Tilemap | null = null;
-  private mapBounds: any = null;
+  private mapBounds: MapBounds | null = null;
 
   constructor() {
     super({ key: 'VenueScene' });
   }
 
   preload() {
-    // Load the actual tileset as a spritesheet instead of using the JSON map
-    this.load.spritesheet('spritesheet', '/tilesets/spritesheet.png', {
+    // Load both tilesets from Tiled
+    this.load.spritesheet('spritesheet', '/map/isometric tileset/spritesheet.png', {
       frameWidth: 32,
       frameHeight: 32
     });
     
-    // Load the map data - we'll create a simpler version since external tilesets aren't supported
-    this.load.json('mapData', '/map/demoMap.tmj');
+    this.load.spritesheet('spritesheet02', '/map/isometric tileset/spritesheet02.png', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
+    
+    // Load the map data from Tiled
+    this.load.json('mapData', '/map/map..tmj');
     
     // Load avatar
     this.load.image('avatar', '/avatar.svg');
@@ -94,106 +108,149 @@ class VenueScene extends Phaser.Scene {
 
   createMap() {
     try {
-      // Get the map data
       const mapData = this.cache.json.get('mapData');
       
-      if (!mapData || !mapData.layers) {
+      if (!mapData || !mapData.layers || !mapData.tilesets) {
         console.error('Map data not found or invalid');
         this.createFallbackMap();
         return;
       }
       
-      console.log('Map data loaded:', mapData);
+      console.log('Map loaded:', { width: mapData.width, height: mapData.height, tileWidth: mapData.tilewidth, tileHeight: mapData.tileheight });
+      console.log('Tilesets:', mapData.tilesets);
       
-      // Find the Bottom layer
-      const bottomLayer = mapData.layers.find((layer: any) => layer.name === 'Bottom');
-      const topLayer = mapData.layers.find((layer: any) => layer.name === 'Top');
+      const mapWidth = mapData.width;
+      const mapHeight = mapData.height;
+      const tileWidth = mapData.tilewidth;
+      const tileHeight = 16; // For isometric, height is typically half of width
       
-      if (!bottomLayer) {
-        console.error('Bottom layer not found');
-        this.createFallbackMap();
-        return;
+      // Calculate the visible map size in world coordinates
+      // For isometric: map world width = (mapWidth + mapHeight) * (tileWidth / 2)
+      // For isometric: map world height = (mapWidth + mapHeight) * (tileHeight / 2)
+      const mapWorldWidth = (mapWidth + mapHeight) * (tileWidth / 2);
+      const mapWorldHeight = (mapWidth + mapHeight) * (tileHeight / 2);
+      
+      // Set world bounds
+      this.physics.world.setBounds(0, 0, mapWorldWidth * 1.5, mapWorldHeight * 1.5);
+      this.cameras.main.setBounds(0, 0, mapWorldWidth * 1.5, mapWorldHeight * 1.5);
+      
+      const centerX = mapWorldWidth / 2;
+      const centerY = mapWorldHeight / 2;
+      
+      // Store map bounds
+      this.mapBounds = {
+        centerX,
+        centerY,
+        mapWidth,
+        mapHeight,
+        tileWidth,
+        tileHeight,
+        scale: 1
+      };
+      
+      // Build tileset map: gid -> {tilesetKey, frameIndex}
+      const tilesetMap: Map<number, { key: string; frameIndex: number }> = new Map();
+      
+      // Sort tilesets by firstgid to handle gid ranges correctly
+      const sortedTilesets = [...mapData.tilesets].sort((a, b) => a.firstgid - b.firstgid);
+      
+      for (let tsIdx = 0; tsIdx < sortedTilesets.length; tsIdx++) {
+        const ts = sortedTilesets[tsIdx];
+        const nextTileset = sortedTilesets[tsIdx + 1];
+        const tilesetKey = ts.source.replace('.tsx', '');
+        const firstgid = ts.firstgid;
+        
+        // Calculate how many tiles are in this tileset
+        // Either until the next tileset's firstgid, or use predetermined counts
+        let tileCount = 0;
+        if (nextTileset) {
+          // tileCount = nextTileset.firstgid - firstgid;
+          // But we'll use explicit counts to be safe
+          if (tilesetKey === 'spritesheet') tileCount = 121;
+          else if (tilesetKey === 'spritesheet02') tileCount = 400;
+        } else {
+          if (tilesetKey === 'spritesheet') tileCount = 121;
+          else if (tilesetKey === 'spritesheet02') tileCount = 400;
+        }
+        
+        for (let i = 0; i < tileCount; i++) {
+          tilesetMap.set(firstgid + i, { key: tilesetKey, frameIndex: i });
+        }
       }
       
-      const mapWidth = mapData.width || 30;
-      const mapHeight = mapData.height || 30;
-      const tileWidth = mapData.tilewidth || 32;
-      const tileHeight = mapData.tileheight || 16;
+      console.log('Tileset map built with', tilesetMap.size, 'entries');
+      console.log('Tilesets:', sortedTilesets.map(ts => ({ source: ts.source, firstgid: ts.firstgid })));
       
-      // Create tiles from the bottom layer data
-      this.renderMapLayer(bottomLayer.data, mapWidth, mapHeight, tileWidth, tileHeight, 0);
-      
-      // Create tiles from the top layer if it exists
-      if (topLayer && topLayer.data) {
-        this.renderMapLayer(topLayer.data, mapWidth, mapHeight, tileWidth, tileHeight, 1);
-      }
+      // Render all layers
+      let depthIndex = 0;
+      mapData.layers.forEach((layer: { name: string; data?: number[] }) => {
+        if (layer.data) {
+          console.log(`Rendering layer: ${layer.name}`);
+          this.renderMapLayer(layer.data, mapWidth, mapHeight, tileWidth, tileHeight, depthIndex * 1000, tilesetMap);
+          depthIndex++;
+        }
+      });
       
       console.log('Map rendered successfully!');
+      
+      // Center camera on map
+      this.cameras.main.centerOn(centerX, centerY);
       
     } catch (error) {
       console.error('Error loading map:', error);
       this.createFallbackMap();
     }
-    
-    // Add UI elements
-    this.addUIElements();
   }
 
-  renderMapLayer(layerData: number[], mapWidth: number, mapHeight: number, tileWidth: number, tileHeight: number, layerIndex: number) {
-    // Calculate center offset to center the map on screen
-    const centerX = this.cameras.main.width / 2;
-    const centerY = this.cameras.main.height / 2;
+  renderMapLayer(
+    layerData: number[],
+    mapWidth: number,
+    mapHeight: number,
+    tileWidth: number,
+    tileHeight: number,
+    baseDepth: number,
+    tilesetMap: Map<number, { key: string; frameIndex: number }>
+  ) {
+    if (!this.mapBounds) return;
     
-    // Calculate map dimensions in pixels for centering
-    const mapPixelWidth = mapWidth * tileWidth;
-    const mapPixelHeight = mapHeight * tileHeight;
-    
-    console.log('Map centering info:', {
-      screenWidth: this.cameras.main.width,
-      screenHeight: this.cameras.main.height,
-      mapWidth, mapHeight, tileWidth, tileHeight,
-      mapPixelWidth, mapPixelHeight,
-      centerX, centerY
-    });
+    const { centerX, centerY, scale } = this.mapBounds;
     
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
-        const tileIndex = y * mapWidth + x;
-        const tileId = layerData[tileIndex];
+        let tileGid = layerData[y * mapWidth + x];
         
-        if (tileId === 0) continue; // Skip empty tiles
+        if (tileGid === 0) continue; // Skip empty tiles
         
-        // Convert to isometric coordinates
-        // For isometric: screenX = (gridX - gridY) * tileWidth/2, screenY = (gridX + gridY) * tileHeight/2
-        const isoX = (x - y) * (tileWidth / 2);
-        const isoY = (x + y) * (tileHeight / 2);
+        // Mask off flip bits (top 3 bits)
+        const FLIP_H = 0x80000000;
+        const FLIP_V = 0x40000000;
+        const FLIP_D = 0x20000000;
+        tileGid = tileGid & ~(FLIP_H | FLIP_V | FLIP_D);
         
-        // Center the entire map on screen
-        const finalX = isoX + centerX;
-        const finalY = isoY + centerY - (mapPixelHeight / 4); // Offset to account for isometric height
+        // Get tileset info from gid
+        const tileInfo = tilesetMap.get(tileGid);
+        if (!tileInfo) {
+          continue;
+        }
         
-        // Create tile sprite (tileId - 1 because Tiled uses 1-based indexing)
-        const frameIndex = Math.max(0, (tileId - 1) % 121); // 121 is total frames in spritesheet (11x11)
-        const tile = this.add.image(finalX, finalY, 'spritesheet', frameIndex);
-        tile.setDepth(layerIndex * 1000 + y); // Set depth for proper rendering order
+        // Isometric projection: 
+        // For isometric maps, tile height is typically half the tile width
+        // X coordinate: (col - row) * (tile_width/2)
+        // Y coordinate: (col + row) * (tile_height/2) where tile_height = 16 for isometric
+        const isoX = (x - y) * (tileWidth / 2) * scale;
+        const isoY = (x + y) * (tileHeight / 2) * scale;
         
-        // Scale up tiles to make them more visible for now
-        tile.setScale(1.5); // Temporary scale until you make larger tiles
+        // Position on screen (centered)
+        const screenX = isoX + centerX;
+        const screenY = isoY + centerY;
+        
+        // Create tile sprite using the correct tileset
+        const tile = this.add.image(screenX, screenY, tileInfo.key, tileInfo.frameIndex);
+        tile.setScale(scale);
+        tile.setDepth(baseDepth + y);
+        tile.setOrigin(0.5, 0.5);
       }
     }
-    
-    // Store map bounds for player positioning
-    this.mapBounds = {
-      centerX: centerX,
-      centerY: centerY - (mapPixelHeight / 4),
-      mapWidth: mapWidth,
-      mapHeight: mapHeight,
-      tileWidth: tileWidth,
-      tileHeight: tileHeight,
-      scale: 1.5 // Store the scale factor
-    };
-    
-    console.log('Map bounds set:', this.mapBounds);
   }
 
   createFallbackMap() {
@@ -237,26 +294,27 @@ class VenueScene extends Phaser.Scene {
       mapWidth: mapWidth,
       mapHeight: mapHeight,
       tileWidth: tileSize,
-      tileHeight: tileSize / 2
+      tileHeight: tileSize / 2,
+      scale: 1
     };
   }
 
-  addUIElements() {
-    // Add festival decorations - positioned relative to screen, not map
-    this.add.text(this.cameras.main.width / 2, 50, '🎎 Japonism Festival', {
-      fontSize: '32px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 4
-    }).setOrigin(0.5).setScrollFactor(0); // UI stays fixed on screen
+  // addUIElements() {
+  //   // Add festival decorations - positioned relative to screen, not map
+  //   this.add.text(this.cameras.main.width / 2, 50, '🎎 Japonism Festival', {
+  //     fontSize: '32px',
+  //     color: '#ffffff',
+  //     stroke: '#000000',
+  //     strokeThickness: 4
+  //   }).setOrigin(0.5).setScrollFactor(0); // UI stays fixed on screen
     
-    this.add.text(this.cameras.main.width / 2, this.cameras.main.height - 50, 'Click to move or use arrow keys', {
-      fontSize: '18px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 2
-    }).setOrigin(0.5).setScrollFactor(0); // UI stays fixed on screen
-  }
+  //   this.add.text(this.cameras.main.width / 2, this.cameras.main.height - 50, 'Click to move or use arrow keys', {
+  //     fontSize: '18px',
+  //     color: '#ffffff',
+  //     stroke: '#000000',
+  //     strokeThickness: 2
+  //   }).setOrigin(0.5).setScrollFactor(0); // UI stays fixed on screen
+  // }
 
   initSocket() {
     // Get the current host and construct server URL
@@ -311,29 +369,22 @@ class VenueScene extends Phaser.Scene {
 
     // Update or create player sprites
     Object.entries(playersData).forEach(([socketId, player]) => {
+      if (!this.mapBounds) return;
+      
+      // Convert tile coordinates to world coordinates
+      const isoX = (player.x - player.y) * (this.mapBounds.tileWidth / 2) * (this.mapBounds.scale || 1);
+      const isoY = (player.x + player.y) * (this.mapBounds.tileHeight / 2) * (this.mapBounds.scale || 1);
+      const worldX = isoX + this.mapBounds.centerX;
+      const worldY = isoY + this.mapBounds.centerY;
+      
       let playerContainer = this.players.get(socketId);
       
       if (!playerContainer) {
-        // Create new player
-        // Convert player position to isometric if needed
-        let playerX = player.x;
-        let playerY = player.y;
+        // Create new player container
+        playerContainer = this.add.container(worldX, worldY);
         
-        // If mapBounds exists, adjust player position to be on the map
-        if (this.mapBounds) {
-          // If player position seems to be in tile coordinates, convert to world
-          if (player.x < 100 && player.y < 100) {
-            const isoX = (player.x - player.y) * (this.mapBounds.tileWidth / 2) * (this.mapBounds.scale || 1);
-            const isoY = (player.x + player.y) * (this.mapBounds.tileHeight / 2) * (this.mapBounds.scale || 1);
-            playerX = isoX + this.mapBounds.centerX;
-            playerY = isoY + this.mapBounds.centerY;
-          }
-        }
-        
-        playerContainer = this.add.container(playerX, playerY);
-        
-        // Avatar sprite - scale to match tile scale
-        const avatarScale = (this.mapBounds?.scale || 1) * 0.8;
+        // Avatar sprite
+        const avatarScale = (this.mapBounds.scale || 1) * 0.8;
         const avatar = this.add.image(0, -16 * avatarScale, 'avatar').setScale(avatarScale);
         avatar.setTint(parseInt(player.color.replace('#', ''), 16) || 0xffffff);
         
@@ -346,28 +397,12 @@ class VenueScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         playerContainer.add([avatar, nameText]);
-        playerContainer.setDepth(10000 + playerY); // High depth to be above tiles
+        playerContainer.setDepth(10000 + worldY);
         this.players.set(socketId, playerContainer);
-        
-        console.log('Player created at:', { playerX, playerY, originalPos: { x: player.x, y: player.y } });
       } else {
-        // Update position
-        let playerX = player.x;
-        let playerY = player.y;
-        
-        // If mapBounds exists, adjust player position to be on the map
-        if (this.mapBounds) {
-          // If player position seems to be in tile coordinates, convert to world
-          if (player.x < 100 && player.y < 100) {
-            const isoX = (player.x - player.y) * (this.mapBounds.tileWidth / 2) * (this.mapBounds.scale || 1);
-            const isoY = (player.x + player.y) * (this.mapBounds.tileHeight / 2) * (this.mapBounds.scale || 1);
-            playerX = isoX + this.mapBounds.centerX;
-            playerY = isoY + this.mapBounds.centerY;
-          }
-        }
-        
-        playerContainer.setPosition(playerX, playerY);
-        playerContainer.setDepth(10000 + playerY); // Update depth based on Y position
+        // Update existing player position
+        playerContainer.setPosition(worldX, worldY);
+        playerContainer.setDepth(10000 + worldY);
       }
     });
   }
@@ -375,22 +410,16 @@ class VenueScene extends Phaser.Scene {
 
   update() {
     if (this.cursors && this.socket && this.currentPlayer) {
-      let moved = false;
-      
       if (this.cursors.left?.isDown) {
         this.socket.emit('move', { direction: 'left' });
-        moved = true;
       } else if (this.cursors.right?.isDown) {
         this.socket.emit('move', { direction: 'right' });
-        moved = true;
       }
       
       if (this.cursors.up?.isDown) {
         this.socket.emit('move', { direction: 'up' });
-        moved = true;
       } else if (this.cursors.down?.isDown) {
         this.socket.emit('move', { direction: 'down' });
-        moved = true;
       }
       
       // For isometric maps, also support diagonal movement
@@ -441,7 +470,7 @@ export default function VenuePage() {
         width: window.innerWidth,
         height: window.innerHeight,
         parent: 'phaser-game',
-        backgroundColor: '#87CEEB',
+        backgroundColor: '#b3a0ff',
         scene: VenueScene,
         physics: {
           default: 'arcade',
@@ -503,11 +532,11 @@ export default function VenuePage() {
     newSocket.on('connect', () => {
     });
 
-    newSocket.on('playerData', (player: Player) => {
+    newSocket.on('playerData', () => {
       // Handle player data
     });
 
-    newSocket.on('players', (playersData: Record<string, Player>) => {
+    newSocket.on('players', () => {
       // Handle players data
     });
 
@@ -522,10 +551,6 @@ export default function VenuePage() {
 
   return (
     <>
-      <Link href="/" className="home-button" title="Go to Home">
-        🏠
-      </Link>
-
       <div className="game-container-fullscreen">
         <div id="phaser-game" style={{ width: '100%', height: '100%' }} />
       </div>
