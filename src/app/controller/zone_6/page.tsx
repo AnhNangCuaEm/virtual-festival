@@ -761,7 +761,7 @@ export default function NattoGamePage() {
               </div>
               <button
                 onClick={() => setGameState("description")}
-                className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
+                className="px-8 py-3 bg-theme-yellow rounded-full font-semibold active:scale-95 transition-transform"
               >
                 もう一度挑戦
               </button>

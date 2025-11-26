@@ -286,7 +286,7 @@ export default function Zone4() {
             <div className="px-3 py-1 rounded bg-white/10">Score: {score}</div>
             <button
               onClick={handleSkip}
-              className="px-3 py-1 ml-2 rounded-full bg-red-500/90 text-white active:scale-[0.98]"
+              className="px-3 py-1 ml-2 rounded-full bg-red-500/90 text-white active:scale-95 transition-transform"
             >
               Skip
             </button>
@@ -329,7 +329,7 @@ export default function Zone4() {
                 </button> */}
                 <Link
                   href="/controller/"
-                  className="px-8 py-3 bg-theme-yellow text-black rounded-lg font-semibold"
+                  className="px-8 py-3 bg-theme-yellow text-black rounded-lg font-semibold active:scale-95 transition-transform"
                 >
                   コントローラーに戻る
                 </Link>

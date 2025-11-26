@@ -5,6 +5,7 @@ import BackBtn from "@/components/ui/BackBtn";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "lucide-react";
 
 type StateType = "guide" | "preview" | "choose-style" | "result";
 
@@ -305,7 +306,7 @@ export default function Page() {
             className="flex flex-col items-center space-y-6 w-full max-w-md mx-auto"
           >
             {/* Camera/Image Container */}
-            <div className="relative w-full aspect-[3/4] bg-black rounded-2xl overflow-hidden">
+            <div className="relative w-full aspect-3/4 bg-black rounded-2xl overflow-hidden">
               {capturedImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -317,7 +318,7 @@ export default function Page() {
                 <>
                   {/* Camera Not Started - Show Enable Button */}
                   {!cameraInitialized && !cameraError && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div className="absolute inset-0 bg-linear-to-br from-violet-500 to-purple-600 flex flex-col items-center justify-center p-6 text-center z-10">
                       <div className="bg-white/10 backdrop-blur-sm rounded-full p-6 mb-4">
                         <svg
                           className="w-16 h-16 text-white"
@@ -350,7 +351,7 @@ export default function Page() {
                           setCameraInitialized(true);
                           startCamera();
                         }}
-                        className="px-8 py-3 bg-white text-violet-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg"
+                        className="px-8 py-3 bg-white text-violet-600 rounded-xl font-semibold shadow-lg active:scale-95 transition-transform"
                       >
                         カメラを有効にする
                       </button>
@@ -386,7 +387,7 @@ export default function Page() {
                       <p className="text-red-600 mb-4 text-sm">{cameraError}</p>
                       <button
                         onClick={startCamera}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg active:scale-95 transition-transform"
                       >
                         再試行
                       </button>
@@ -414,13 +415,13 @@ export default function Page() {
                 <>
                   <button
                     onClick={retakeImage}
-                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-800 rounded-xl font-medium"
+                    className="flex-1 py-3 px-6 bg-gray-200 text-gray-800 rounded-xl font-medium active:scale-95 transition-transform"
                   >
                     撮り直す
                   </button>
                   <button
                     onClick={confirmImage}
-                    className="flex-1 py-3 px-6 bg-theme-yellow rounded-xl font-medium"
+                    className="flex-1 py-3 px-6 bg-theme-yellow rounded-xl font-medium active:scale-95 transition-transform"
                   >
                     確定
                   </button>
@@ -429,7 +430,7 @@ export default function Page() {
                 <button
                   onClick={captureImage}
                   disabled={!isCameraReady || isLoadingCamera}
-                  className="w-full flex justify-center gap-2 py-3 px-6 bg-theme-yellow rounded-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center gap-2 py-3 px-6 bg-theme-yellow rounded-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 >
                   <Image src="/icons/camera.svg" width={24} height={24} alt="写真を撮る" />
                   <span>写真を撮る</span>
@@ -481,7 +482,7 @@ export default function Page() {
                 </div>
                 <button
                   onClick={() => setCurrentState("preview")}
-                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-400"
+                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-400 active:scale-95 transition-transform"
                 >
                   戻る
                 </button>
@@ -528,18 +529,26 @@ export default function Page() {
                   setGeneratedImage(null);
                   setCapturedImage(null);
                 }}
-                className="px-6 py-3 bg-theme-yellow text-white rounded-lg font-semibold"
+                className="px-6 py-3 bg-theme-yellow text-white rounded-lg font-semibold active:scale-95 transition-transform"
               >
                 最初からやり直す
               </button>
               {generatedImage && (
-                <a
-                  href={generatedImage}
-                  download="kimono-result.jpg"
-                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold text-center"
-                >
-                  画像をダウンロード
-                </a>
+                <div className="flex flex-col">
+                  <a
+                    href={generatedImage}
+                    download="kimono-result.jpg"
+                    className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold text-center active:scale-95 transition-transform"
+                  >
+                    画像をダウンロード
+                  </a>
+                  <Link
+                    href="/controller/"
+                    className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold active:scale-95 transition-transform"
+                  >
+                    コントローラーに戻る
+                  </Link>
+                </div>
               )}
             </div>
           </motion.div>

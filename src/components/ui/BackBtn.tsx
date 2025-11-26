@@ -27,7 +27,7 @@ export default function BackBtn() {
 
   return (
     <>
-      <button onClick={handleBackClick} className="active:scale-95 transition-transform">
+      <button onClick={handleBackClick} className="active:scale-90 transition-transform">
         <Image src="/icons/back.svg" alt="Back" width={16} height={16} />
       </button>
 

@@ -183,7 +183,7 @@ export default function Page() {
                                 <button
                                     key={index}
                                     onClick={() => handleChoice(choice.next)}
-                                    className="px-6 py-3 bg-theme-yellow text-black rounded-full font-semibold text-center"
+                                    className="px-6 py-3 bg-theme-yellow text-black rounded-full font-semibold text-center active:scale-95 transition-transform"
                                 >
                                     {choice.text}
                                 </button>
@@ -226,13 +226,13 @@ export default function Page() {
                         <div className="flex gap-4">
                             <button
                                 onClick={resetGame}
-                                className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold"
+                                className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold active:scale-95 transition-transform"
                             >
                                 もう一度プレイ
                             </button>
                             <Link
                                 href="/controller/"
-                                className="px-8 py-3 bg-gray-300 text-black rounded-full font-semibold"
+                                className="px-8 py-3 bg-gray-300 text-black rounded-full font-semibold active:scale-95 transition-transform"
                             >
                                 戻る
                             </Link>

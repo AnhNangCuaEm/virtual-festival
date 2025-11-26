@@ -371,7 +371,7 @@ export default function Page() {
                 <div className="relative w-full max-w-md bg-white/20 p-6 rounded-lg">
                   <button
                     onClick={replayAudio}
-                    className="absolute top-3 right-3 p-2 bg-gray-200/80 rounded-full hover:bg-gray-300/80 transition-colors flex items-center justify-center"
+                    className="absolute top-3 right-3 p-2 bg-gray-200/80 rounded-full flex items-center justify-center active:scale-95 transition-transform"
                     title="最初から再生"
                   >
                     <Image
@@ -385,7 +385,7 @@ export default function Page() {
                   <div className="flex justify-center">
                     <button
                       onClick={toggleAudio}
-                      className="p-4 bg-gray-200/80 rounded-full hover:bg-gray-300/80 transition-colors flex items-center justify-center shadow-lg"
+                      className="p-4 bg-gray-200/80 rounded-full active:scale-95 transition-transform flex items-center justify-center shadow-lg"
                       title={isPlaying ? "一時停止" : "再生"}
                     >
                       {isPlaying ? (
@@ -544,7 +544,7 @@ export default function Page() {
             </button> */}
             <Link
               href="/controller/"
-              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold"
+              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold active:scale-95 transition-transform"
             >
               コントローラーに戻る
             </Link>

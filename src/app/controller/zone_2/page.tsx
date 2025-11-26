@@ -280,7 +280,7 @@ export default function Page() {
             </div>
 
             {/* Question */}
-            <div className="w-full h-60 p-4 bg-gradient-to-r bg-gray-200/80 rounded-2xl overflow-hidden relative">
+            <div className="w-full h-60 p-4 bg-linear-to-r bg-gray-200/80 rounded-2xl overflow-hidden relative">
               <Image
                 src={`/images/zone_2/zone_2_bg.jpg`}
                 alt="Question Image"
@@ -435,7 +435,7 @@ export default function Page() {
             </button> */}
             <Link
               href="/controller/"
-              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold"
+              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold active:scale-95 transition-transform"
             >
               コントローラーに戻る
             </Link>
