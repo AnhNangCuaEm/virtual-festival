@@ -33,7 +33,7 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
-export function SocketProvider({ children }: { children: ReactNode }) {
+export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
