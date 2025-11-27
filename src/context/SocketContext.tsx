@@ -1,7 +1,14 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useRef,
+} from "react";
+import { io, Socket } from "socket.io-client";
 
 interface Player {
   id: string;
@@ -37,21 +44,41 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNicknameState] = useState("");
   const [isNicknameSet, setIsNicknameSet] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+
+  // Wrapper for setNickname that also saves to localStorage
+  const setNickname = (name: string) => {
+    setNicknameState(name);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("playerNickname", name);
+      console.log("💾 Saved nickname to localStorage:", name);
+    }
+  };
+
+  // Load nickname from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedNickname = localStorage.getItem("playerNickname");
+      if (savedNickname) {
+        setNicknameState(savedNickname);
+        console.log("📖 Loaded nickname from localStorage:", savedNickname);
+      }
+    }
+  }, []);
 
   // Helper function to emit movement
   const emitMovement = (direction: string) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('move', { direction });
+      socketRef.current.emit("move", { direction });
     }
   };
 
   // Helper function to emit vector movement
   const emitMoveVector = (vectorData: VectorData) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('moveVector', vectorData);
+      socketRef.current.emit("moveVector", vectorData);
     }
   };
 
@@ -61,69 +88,84 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     // If socket already exists and is connected, don't create a new one
     if (socketRef.current && socketRef.current.connected) {
-      console.log('✅ Socket already connected, reusing existing connection');
+      console.log("✅ Socket already connected, reusing existing connection");
       return;
     }
 
     // Get the current host and construct server URL
     const getServerUrl = () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const hostname = window.location.hostname;
         const protocol = window.location.protocol;
-        
-        console.log('📍 Current location - hostname:', hostname, 'protocol:', protocol, 'port:', window.location.port);
-        
+
+        console.log(
+          "📍 Current location - hostname:",
+          hostname,
+          "protocol:",
+          protocol,
+          "port:",
+          window.location.port
+        );
+
         // If accessing via IP or custom hostname, use that IP for server connection
-        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        if (hostname !== "localhost" && hostname !== "127.0.0.1") {
           const url = `${protocol}//${hostname}:3001`;
-          console.log('🌐 Using IP connection:', url);
+          console.log("🌐 Using IP connection:", url);
           return url;
         }
       }
-      console.log('🌐 Using localhost connection: http://localhost:3001');
-      return 'http://localhost:3001';
+      console.log("🌐 Using localhost connection: http://localhost:3001");
+      return "http://localhost:3001";
     };
 
     const serverUrl = getServerUrl();
-    console.log('🔌 Connecting to server:', serverUrl, 'with nickname:', nickname);
+    console.log(
+      "🔌 Connecting to server:",
+      serverUrl,
+      "with nickname:",
+      nickname
+    );
 
     const newSocket = io(serverUrl, {
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
     });
 
-    newSocket.on('connect', () => {
-      console.log('✅ Connected to server successfully');
+    newSocket.on("connect", () => {
+      console.log("✅ Connected to server successfully");
       setIsConnected(true);
       // Tell server this is a player controller with nickname
-      newSocket.emit('setRole', { role: 'player', name: nickname });
+      newSocket.emit("setRole", { role: "player", name: nickname });
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('❌ Disconnected from server');
+    newSocket.on("disconnect", () => {
+      console.log("❌ Disconnected from server");
       setIsConnected(false);
     });
 
-    newSocket.on('playerData', (player: Player) => {
-      console.log('📊 Received player data:', player);
+    newSocket.on("playerData", (player: Player) => {
+      console.log("📊 Received player data:", player);
       setCurrentPlayer(player);
     });
 
-    newSocket.on('reconnect', () => {
-      console.log('🔄 Reconnected to server');
+    newSocket.on("reconnect", () => {
+      console.log("🔄 Reconnected to server");
       setIsConnected(true);
     });
 
-    newSocket.on('connect_error', (error: Error | string) => {
-      console.error('❌ Connection error:', typeof error === 'string' ? error : error.message);
+    newSocket.on("connect_error", (error: Error | string) => {
+      console.error(
+        "❌ Connection error:",
+        typeof error === "string" ? error : error.message
+      );
     });
 
     socketRef.current = newSocket;
     setSocket(newSocket);
 
     return () => {
-      console.log('🔌 Cleaning up socket connection');
+      console.log("🔌 Cleaning up socket connection");
       newSocket.close();
     };
   }, [isNicknameSet, nickname]);
@@ -137,20 +179,18 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     isNicknameSet,
     setIsNicknameSet,
     emitMovement,
-    emitMoveVector
+    emitMoveVector,
   };
 
   return (
-    <SocketContext.Provider value={value}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
   );
 }
 
 export function useSocket() {
   const context = useContext(SocketContext);
   if (context === undefined) {
-    throw new Error('useSocket must be used within a SocketProvider');
+    throw new Error("useSocket must be used within a SocketProvider");
   }
   return context;
 }

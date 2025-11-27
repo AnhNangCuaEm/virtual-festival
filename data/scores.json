@@ -1,0 +1,25 @@
+{
+  "zone_1": [],
+  "zone_2": [
+    {
+      "name": "Player",
+      "score": 100,
+      "timestamp": 1764215157886
+    }
+  ],
+  "zone_3": [
+    {
+      "name": "Player",
+      "score": 40,
+      "timestamp": 1764215206971
+    }
+  ],
+  "zone_4": [],
+  "zone_6": [
+    {
+      "name": "Player",
+      "score": 90,
+      "timestamp": 1763695531564
+    }
+  ]
+}

@@ -48,10 +48,39 @@ export default function Page() {
   const totalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingTimeout = useRef<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const scoreRef = useRef(0);
 
   useEffect(() => {
     setQData(quizData);
   }, []);
+
+  // Save score when quiz finishes
+  useEffect(() => {
+    if (currentState === "result" && scoreRef.current > 0) {
+      const playerName =
+        typeof window !== "undefined"
+          ? localStorage.getItem("playerNickname") || "Player"
+          : "Player";
+
+      console.log("🎮 Saving score to API:", scoreRef.current);
+      fetch("/api/scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          zone: "zone_3",
+          name: playerName,
+          score: scoreRef.current,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("✅ Score saved:", data);
+        })
+        .catch((err) => {
+          console.error("❌ Error saving score:", err);
+        });
+    }
+  }, [currentState]);
 
   const playAudio = useCallback(() => {
     if (audioRef.current) {
@@ -223,7 +252,11 @@ export default function Page() {
       else if (timeLeft > 5) score = currentQuestion.scores[1];
       else score = currentQuestion.scores[0];
 
-      setTotalScore((prev) => prev + score);
+      setTotalScore((prev) => {
+        const newScore = prev + score;
+        scoreRef.current = newScore;
+        return newScore;
+      });
     }
 
     const result: QuestionResult = {
@@ -329,10 +362,11 @@ export default function Page() {
               </div>
               <div className="flex gap-4">
                 <div
-                  className={`flex gap-2 px-4 py-2 rounded-lg font-bold ${miniTimer <= 5
-                    ? "bg-red-400/60 text-white"
-                    : "bg-theme-purple/80 text-white"
-                    }`}
+                  className={`flex gap-2 px-4 py-2 rounded-lg font-bold ${
+                    miniTimer <= 5
+                      ? "bg-red-400/60 text-white"
+                      : "bg-theme-purple/80 text-white"
+                  }`}
                 >
                   <Image
                     src="/icons/time.svg"
@@ -423,20 +457,26 @@ export default function Page() {
                 } else if (isTimeout) {
                   // Timeout: only highlight correct answer
                   if (isCorrect) {
-                    buttonClass += " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
+                    buttonClass +=
+                      " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
                   } else {
-                    buttonClass += " border-gray-400 bg-gray-100 text-gray-500 opacity-40";
+                    buttonClass +=
+                      " border-gray-400 bg-gray-100 text-gray-500 opacity-40";
                   }
                 } else if (isSelected) {
                   if (isCorrect) {
-                    buttonClass += " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
+                    buttonClass +=
+                      " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
                   } else {
-                    buttonClass += " border-red-500 bg-red-100 text-red-700 shadow-lg shadow-red-500/50";
+                    buttonClass +=
+                      " border-red-500 bg-red-100 text-red-700 shadow-lg shadow-red-500/50";
                   }
                 } else if (isCorrect) {
-                  buttonClass += " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
+                  buttonClass +=
+                    " border-green-500 bg-green-100 text-green-700 shadow-lg shadow-green-500/50";
                 } else {
-                  buttonClass += " border-gray-400 bg-gray-100 text-gray-500 opacity-40";
+                  buttonClass +=
+                    " border-gray-400 bg-gray-100 text-gray-500 opacity-40";
                 }
 
                 return (
@@ -501,8 +541,8 @@ export default function Page() {
                       あなたの選択
                     </div>
                     <div className="text-center font-bold text-black">正解</div>
-                  </div>d
-                  <div className="border-b-2 border-black mb-4"></div>
+                  </div>
+                  d<div className="border-b-2 border-black mb-4"></div>
                   <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                     <div className="space-y-2">
                       {quizResults.map((result, index) => (

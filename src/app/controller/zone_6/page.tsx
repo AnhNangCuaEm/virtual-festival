@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { io, Socket } from "socket.io-client";
 import Header from "@/components/layout/Header";
 import BackBtn from "@/components/ui/BackBtn";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,40 +19,13 @@ export default function NattoGamePage() {
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const [gameState, setGameState] = useState<GameState>("description");
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [mixingQuality, setMixingQuality] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [hasMixingStarted, setHasMixingStarted] = useState(false);
   const timerStarted = useRef(false);
-
-  // Connect to socket
-  useEffect(() => {
-    const getServerUrl = () => {
-      if (typeof window !== "undefined") {
-        const hostname = window.location.hostname;
-        if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-          return `http://${hostname}:3001`;
-        }
-      }
-      return "http://localhost:3001";
-    };
-
-    const serverUrl = getServerUrl();
-    const newSocket = io(serverUrl, { transports: ["websocket"] });
-
-    newSocket.on("connect", () => {
-      console.log("Zone 6 (Natto Game) connected");
-      newSocket.emit("setRole", "zone_6");
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.close();
-    };
-  }, []);
+  const scoreRef = useRef(0);
 
   const startGame = () => {
     setGameState("playing");
@@ -79,13 +51,30 @@ export default function NattoGamePage() {
             setGameState("result");
             if (timerRef.current) clearInterval(timerRef.current);
 
-            if (socket) {
-              socket.emit("gameScore", {
+            // Save score to API
+            const playerName =
+              typeof window !== "undefined"
+                ? localStorage.getItem("playerNickname") || "Player"
+                : "Player";
+
+            console.log("🎮 Saving score to API:", scoreRef.current);
+            fetch("/api/scores", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
                 zone: "zone_6",
-                game: "納豆混ぜゲーム",
-                score: score,
+                name: playerName,
+                score: scoreRef.current,
+              }),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                console.log("✅ Score saved:", data);
+              })
+              .catch((err) => {
+                console.error("❌ Error saving score:", err);
               });
-            }
+
             return 0;
           }
           return prev - 1;
@@ -100,7 +89,7 @@ export default function NattoGamePage() {
         timerStarted.current = false;
       }
     };
-  }, [gameState, hasMixingStarted, score, socket]);
+  }, [gameState, hasMixingStarted, score]);
 
   useEffect(() => {
     if (gameState === "playing" && hasMixingStarted && !timerStarted.current) {
@@ -599,6 +588,7 @@ export default function NattoGamePage() {
         const completeRotations = Math.floor(totalDegrees / 360);
         const newScore = completeRotations * 10;
 
+        scoreRef.current = newScore;
         setScore(newScore);
         setMixingQuality(Math.floor(this.mixingQualitySmoothed));
       }
@@ -656,22 +646,6 @@ export default function NattoGamePage() {
       }
     };
   }, [gameState, hasMixingStarted]);
-
-  // Game end logic
-  useEffect(() => {
-    if (gameState === "playing" && timeLeft <= 0) {
-      // Game over - go to result screen
-      setGameState("result");
-
-      if (socket) {
-        socket.emit("gameScore", {
-          zone: "zone_6",
-          game: "納豆混ぜゲーム",
-          score: score,
-        });
-      }
-    }
-  }, [gameState, timeLeft, mixingQuality, socket, score]);
 
   // Reset game state when leaving result screen
   useEffect(() => {

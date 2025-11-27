@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
 import { InfiniteGallery } from "@/components/ui/infinite-gallery";
 
 interface GameRanking {
@@ -8,12 +7,13 @@ interface GameRanking {
   players: Array<{ name: string; points: number }>;
 }
 
+interface RankingEntry {
+  name: string;
+  score: number;
+}
+
 export default function DashboardPage() {
-  const [gameRankings] = useState<GameRanking[]>([
-    {
-      title: "山手線クイズ",
-      players: [],
-    },
+  const [gameRankings, setGameRankings] = useState<GameRanking[]>([
     {
       title: "東京電車アナウンス",
       players: [],
@@ -32,31 +32,73 @@ export default function DashboardPage() {
     },
   ]);
 
+  const [totalRanking, setTotalRanking] = useState<
+    Array<{ name: string; points: number }>
+  >([]);
+
   const galleryImages = Array.from(
     { length: 8 },
     (_, i) => `/images/zone_1/${i + 1}.jpg`
   );
 
   useEffect(() => {
-    const getServerUrl = () => {
-      if (typeof window !== "undefined") {
-        const hostname = window.location.hostname;
-        if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-          return `http://${hostname}:3001`;
-        }
+    // Fetch scores from API
+    const fetchScores = async () => {
+      try {
+        const response = await fetch("/api/scores");
+        const data = await response.json();
+
+        console.log("📊 Scores fetched from API:", data);
+
+        setGameRankings([
+          {
+            title: "東京電車アナウンス",
+            players: (data.zone_2 || []).map((p: RankingEntry) => ({
+              name: p.name,
+              points: p.score,
+            })),
+          },
+          {
+            title: "富士山パズル",
+            players: (data.zone_3 || []).map((p: RankingEntry) => ({
+              name: p.name,
+              points: p.score,
+            })),
+          },
+          {
+            title: "鹿せんべいチャレンジ",
+            players: (data.zone_4 || []).map((p: RankingEntry) => ({
+              name: p.name,
+              points: p.score,
+            })),
+          },
+          {
+            title: "納豆混ぜゲーム",
+            players: (data.zone_6 || []).map((p: RankingEntry) => ({
+              name: p.name,
+              points: p.score,
+            })),
+          },
+        ]);
+
+        setTotalRanking(
+          (data.total || []).map((p: RankingEntry) => ({
+            name: p.name,
+            points: p.score,
+          }))
+        );
+      } catch (error) {
+        console.error("❌ Error fetching scores:", error);
       }
-      return "http://localhost:3001";
     };
-    const serverUrl = getServerUrl();
-    const newSocket = io(serverUrl, { transports: ["websocket"] });
-    newSocket.on("connect", () => {
-      console.log("Dashboard connected to server");
-      newSocket.emit("setRole", "viewer");
-    });
-    // Player updates can be wired here later when real data is ready
-    return () => {
-      newSocket.close();
-    };
+
+    // Fetch immediately
+    fetchScores();
+
+    // Then fetch every 3 seconds
+    const interval = setInterval(fetchScores, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Rankings will be populated from live data in the future; mock logic removed
@@ -194,7 +236,21 @@ export default function DashboardPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody>
+                {totalRanking.map((player, index) => (
+                  <tr key={index} className="border-b border-white/20">
+                    <td className="px-3 py-4 text-center font-bold text-white text-2xl">
+                      {index + 1}
+                    </td>
+                    <td className="px-3 py-4 text-center text-white text-xl">
+                      {player.name}
+                    </td>
+                    <td className="px-3 py-4 text-center font-bold text-white text-2xl">
+                      {player.points}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
             {/* Vertical lines overlay for full height */}
             <div className="pointer-events-none absolute inset-0">

@@ -1,21 +1,21 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
-import * as headbreaker from 'headbreaker';
-import Header from '@/components/layout/Header';
+"use client";
+import { useEffect, useRef, useState } from "react";
+import * as headbreaker from "headbreaker";
+import Header from "@/components/layout/Header";
 // import MuteBtn from '@/components/ui/MuteBtn';
-import BackBtn from '@/components/ui/BackBtn';
-import Link from 'next/link';
+import BackBtn from "@/components/ui/BackBtn";
+import Link from "next/link";
 
 const imageList = [
-  '/images/zone_4/zone_4_pz01.jpg',
-  '/images/zone_4/zone_4_pz04.jpg',
-  '/images/zone_4/zone_4_pz03.jpg'
+  "/images/zone_4/zone_4_pz01.jpg",
+  "/images/zone_4/zone_4_pz04.jpg",
+  "/images/zone_4/zone_4_pz03.jpg",
 ];
 
 function formatTime(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
-  const ss = s.toString().padStart(2, '0');
+  const ss = s.toString().padStart(2, "0");
   return `${m}:${ss}`;
 }
 
@@ -33,30 +33,61 @@ export default function Zone4() {
   const [ticking, setTicking] = useState(false);
 
   const connectedRef = useRef<Set<string>>(new Set());
+  const scoreRef = useRef(0);
+
   useEffect(() => {
     connectedRef.current = new Set();
   }, [level, showStart]);
 
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
-  
+
   useEffect(() => {
     const width = Math.min(800, window.innerWidth - 32);
     const height = Math.floor(width * 0.75);
     setCanvasSize({ width, height });
   }, []);
 
+  // Save score when puzzle is finished
+  useEffect(() => {
+    if (isFinished && scoreRef.current > 0) {
+      const playerName =
+        typeof window !== "undefined"
+          ? localStorage.getItem("playerNickname") || "Player"
+          : "Player";
+
+      console.log("🎮 Saving score to API:", scoreRef.current);
+      fetch("/api/scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          zone: "zone_4",
+          name: playerName,
+          score: scoreRef.current,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("✅ Score saved:", data);
+        })
+        .catch((err) => {
+          console.error("❌ Error saving score:", err);
+        });
+    }
+  }, [isFinished]);
+
   useEffect(() => {
     if (!ticking) return;
-    const id = setInterval(() => setTotalSeconds(t => t + 1), 1000);
+    const id = setInterval(() => setTotalSeconds((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, [ticking]);
 
   useEffect(() => {
     const container = puzzleRef.current;
 
-    if (!container || level >= imageList.length || showNextPrompt || showStart) return;
+    if (!container || level >= imageList.length || showNextPrompt || showStart)
+      return;
 
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     const { width, height } = canvasSize;
     const horiz = 4;
@@ -71,7 +102,7 @@ export default function Zone4() {
     const metadata: Meta[] = Array.from({ length: horiz * vert }, (_, i) => ({
       pid: `L${level}-P${i}`,
       r: Math.floor(i / horiz),
-      c: i % horiz
+      c: i % horiz,
     }));
 
     const img = new Image();
@@ -89,7 +120,7 @@ export default function Zone4() {
         outline: new headbreaker.outline.Rounded(),
         image: img,
         preventOffstageDrag: true,
-        fixed: true
+        fixed: true,
       });
 
       canvas.adjustImagesToPuzzleHeight();
@@ -97,7 +128,7 @@ export default function Zone4() {
       canvas.autogenerate({
         horizontalPiecesCount: horiz,
         verticalPiecesCount: vert,
-        metadata
+        metadata,
       });
 
       const pidAt = (r: number, c: number) => {
@@ -120,11 +151,11 @@ export default function Zone4() {
       }
 
       const getPid = (obj: unknown): string | undefined => {
-        if (obj && typeof obj === 'object' && 'metadata' in obj) {
+        if (obj && typeof obj === "object" && "metadata" in obj) {
           const meta = (obj as { metadata?: unknown }).metadata;
-          if (meta && typeof meta === 'object' && 'pid' in meta) {
+          if (meta && typeof meta === "object" && "pid" in meta) {
             const pid = (meta as { pid?: unknown }).pid;
-            return typeof pid === 'string' ? pid : undefined;
+            return typeof pid === "string" ? pid : undefined;
           }
         }
         return undefined;
@@ -134,23 +165,30 @@ export default function Zone4() {
         const a = getPid(one);
         const b = getPid(other);
         if (!a || !b) return false;
-        return neighbors.get(a)?.has(b) === true || neighbors.get(b)?.has(a) === true;
+        return (
+          neighbors.get(a)?.has(b) === true || neighbors.get(b)?.has(a) === true
+        );
       });
 
       canvas.reframeWithinDimensions();
       canvas.shuffle(0.7);
       canvas.draw();
 
-      canvas.onConnect((piece: unknown, _fig: unknown, targetPiece: unknown) => {
-        const a = getPid(piece);
-        const b = getPid(targetPiece);
-        const isNeighbor =
-          !!a && !!b && (neighbors.get(a)?.has(b) === true || neighbors.get(b)?.has(a) === true);
-        if (!isNeighbor) return;
+      canvas.onConnect(
+        (piece: unknown, _fig: unknown, targetPiece: unknown) => {
+          const a = getPid(piece);
+          const b = getPid(targetPiece);
+          const isNeighbor =
+            !!a &&
+            !!b &&
+            (neighbors.get(a)?.has(b) === true ||
+              neighbors.get(b)?.has(a) === true);
+          if (!isNeighbor) return;
 
-        if (a) connectedRef.current.add(a);
-        if (b) connectedRef.current.add(b);
-      });
+          if (a) connectedRef.current.add(a);
+          if (b) connectedRef.current.add(b);
+        }
+      );
 
       canvas.onDisconnect((piece: unknown) => {
         const a = getPid(piece);
@@ -160,11 +198,26 @@ export default function Zone4() {
       // Add boundary constraint for dragged pieces
       const stageObj = (canvas as unknown as { stage?: unknown }).stage;
       if (stageObj) {
-        const stage = stageObj as { on: (event: string, handler: (e: unknown) => void) => void };
-        stage.on('dragmove', (e: unknown) => {
-          const evt = e as { target?: { x?: (val?: number) => number; y?: (val?: number) => number; width?: () => number; height?: () => number; getParent?: () => unknown } };
+        const stage = stageObj as {
+          on: (event: string, handler: (e: unknown) => void) => void;
+        };
+        stage.on("dragmove", (e: unknown) => {
+          const evt = e as {
+            target?: {
+              x?: (val?: number) => number;
+              y?: (val?: number) => number;
+              width?: () => number;
+              height?: () => number;
+              getParent?: () => unknown;
+            };
+          };
           const target = evt.target;
-          if (!target || typeof target.x !== 'function' || typeof target.y !== 'function') return;
+          if (
+            !target ||
+            typeof target.x !== "function" ||
+            typeof target.y !== "function"
+          )
+            return;
 
           const margin = 150;
           const x = target.x?.();
@@ -193,10 +246,18 @@ export default function Zone4() {
       canvas.attachSolvedValidator();
       canvas.onValid(() => {
         if (level < imageList.length - 1) {
-          setScore(s => s + 20);
+          setScore((s) => {
+            const newScore = s + 20;
+            scoreRef.current = newScore;
+            return newScore;
+          });
           setShowNextPrompt(true);
         } else {
-          setScore(s => s + 20);
+          setScore((s) => {
+            const newScore = s + 20;
+            scoreRef.current = newScore;
+            return newScore;
+          });
           setTicking(false);
           setIsFinished(true);
         }
@@ -211,7 +272,7 @@ export default function Zone4() {
 
   const handleNextLevel = () => {
     setShowNextPrompt(false);
-    setLevel(prev => prev + 1);
+    setLevel((prev) => prev + 1);
   };
 
   // Auto next level after 2 seconds when completed
@@ -227,18 +288,23 @@ export default function Zone4() {
 
   const handleSkip = () => {
     const gained = connectedRef.current.size;
-    if (gained > 0) setScore(s => s + gained);
+    if (gained > 0)
+      setScore((s) => {
+        const newScore = s + gained;
+        scoreRef.current = newScore;
+        return newScore;
+      });
 
     if (level < imageList.length - 1) {
       setShowNextPrompt(false);
-      setLevel(prev => prev + 1);
+      setLevel((prev) => prev + 1);
     } else {
       setTicking(false);
       setIsFinished(true);
     }
   };
 
-  const startBg = imageList[level] ?? '';
+  const startBg = imageList[level] ?? "";
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
@@ -253,22 +319,26 @@ export default function Zone4() {
         {showStart && !isFinished && (
           <div
             className="relative rounded-2xl overflow-hidden shadow-lg"
-            style={{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }}
+            style={{
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+            }}
           >
             <div
               className="absolute inset-0"
               style={{
                 backgroundImage: `url(${startBg})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(8px) brightness(0.7)'
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(8px) brightness(0.7)",
               }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
               <div className="w-fit bg-theme-purple rounded-3xl px-8 py-6 mb-4 text-[#1f2430] shadow">
                 <h1 className="text-2xl font-bold mb-4">富士山パズルゲーム</h1>
                 <p className="text-lg leading-relaxed">
-                  次のパズルを解いてください。<br />
+                  次のパズルを解いてください。
+                  <br />
                   早いほどポイントが取れます。
                 </p>
               </div>
@@ -284,7 +354,9 @@ export default function Zone4() {
 
         {!showStart && !isFinished && (
           <div className="flex items-center gap-2 text-lg text-white/90">
-            <div className="px-3 py-1 rounded bg-white/10">Time: {formatTime(totalSeconds)}</div>
+            <div className="px-3 py-1 rounded bg-white/10">
+              Time: {formatTime(totalSeconds)}
+            </div>
             <div className="px-3 py-1 rounded bg-white/10">Score: {score}</div>
             <button
               onClick={handleSkip}
@@ -299,15 +371,18 @@ export default function Zone4() {
         {isFinished ? (
           <div
             className="relative rounded-2xl overflow-hidden shadow-lg"
-            style={{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }}
+            style={{
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+            }}
           >
             <div
               className="absolute inset-0"
               style={{
                 backgroundImage: `url(${imageList[imageList.length - 1]})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(6px) brightness(0.8)'
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(6px) brightness(0.8)",
               }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
@@ -315,7 +390,9 @@ export default function Zone4() {
                 Congratulation
               </div>
               <div className="text-xl text-white font-bold">
-                <span className="text-2xl text-red-500 font-bold mr-1">{formatTime(totalSeconds)}</span>
+                <span className="text-2xl text-red-500 font-bold mr-1">
+                  {formatTime(totalSeconds)}
+                </span>
                 秒でクリアしました！
               </div>
               <div className="text-4xl font-bold text-green-500">
@@ -340,9 +417,17 @@ export default function Zone4() {
 
             <style jsx>{`
               @keyframes confetti {
-                0% { transform: translateY(-40%) rotate(0deg); opacity: 0; }
-                10% { opacity: 1; }
-                100% { transform: translateY(140%) rotate(720deg); opacity: 0; }
+                0% {
+                  transform: translateY(-40%) rotate(0deg);
+                  opacity: 0;
+                }
+                10% {
+                  opacity: 1;
+                }
+                100% {
+                  transform: translateY(140%) rotate(720deg);
+                  opacity: 0;
+                }
               }
             `}</style>
             {[...Array(24)].map((_, i) => (
@@ -352,11 +437,19 @@ export default function Zone4() {
                 style={{
                   top: `${Math.random() * 20 - 10}%`,
                   left: `${(i / 24) * 100}%`,
-                  width: '3px',
+                  width: "3px",
                   height: `${6 + Math.random() * 16}px`,
-                  background: ['#ff4d4f', '#36cfc9', '#597ef7', '#73d13d', '#faad14'][i % 5],
-                  animation: `confetti ${2.8 + Math.random()}s ease-in forwards`,
-                  animationDelay: `${Math.random() * 0.6}s`
+                  background: [
+                    "#ff4d4f",
+                    "#36cfc9",
+                    "#597ef7",
+                    "#73d13d",
+                    "#faad14",
+                  ][i % 5],
+                  animation: `confetti ${
+                    2.8 + Math.random()
+                  }s ease-in forwards`,
+                  animationDelay: `${Math.random() * 0.6}s`,
                 }}
               />
             ))}
@@ -369,12 +462,12 @@ export default function Zone4() {
                   <div
                     className="rounded-lg"
                     style={{
-                      width: '100%',
-                      height: 'auto',
+                      width: "100%",
+                      height: "auto",
                       backgroundImage: `url(${imageList[level]})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      aspectRatio: '4/3'
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      aspectRatio: "4/3",
                     }}
                   />
                 </div>
@@ -386,12 +479,13 @@ export default function Zone4() {
                 style={{
                   width: `${canvasSize.width}px`,
                   height: `${canvasSize.height}px`,
-                  backgroundColor: 'rgba(128,128,128,0.5)',
-                  border: '1px solid #3a3f4a'
+                  backgroundColor: "rgba(128,128,128,0.5)",
+                  border: "1px solid #3a3f4a",
                 }}
               />
               <div className="text-md font-semibold text-white/90">
-                レベル：{Math.min(level + 1, imageList.length)} / {imageList.length}
+                レベル：{Math.min(level + 1, imageList.length)} /{" "}
+                {imageList.length}
               </div>
             </>
           )
