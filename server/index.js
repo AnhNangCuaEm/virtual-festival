@@ -146,7 +146,7 @@ io.on("connection", (socket) => {
 
     if (speed > 0) {
       // Calculate movement based on vector with slow constant speed
-      const moveSpeed = 5; // Slower constant speed
+      const moveSpeed = 2; // Slower constant speed (reduced from 5)
       const moveX = x * moveSpeed;
       const moveY = y * moveSpeed;
 

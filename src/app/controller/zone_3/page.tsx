@@ -2,7 +2,6 @@
 
 import Header from "@/components/layout/Header";
 import BackBtn from "@/components/ui/BackBtn";
-// import MuteBtn from "@/components/ui/MuteBtn";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import quizData from "@/../data/zone_3/data.json";
@@ -329,10 +328,13 @@ export default function Page() {
                 <br />
                 早く答えるほど高得点！
               </p>
+              <p className="text-md italic text-gray-800 max-w-md">
+                * ヘッドホンまたはイヤホンを使用して、より没入感のある体験をお楽しみください。*
+              </p>
             </div>
             <button
               onClick={startQuiz}
-              className="px-8 py-3 bg-theme-yellow rounded-full font-semibold"
+              className="px-8 py-3 bg-theme-yellow rounded-full font-semibold active:scale-95 transition-transform"
             >
               スタート
             </button>
@@ -403,7 +405,7 @@ export default function Page() {
                 <div className="relative w-full max-w-md bg-white/20 p-6 rounded-lg">
                   <button
                     onClick={replayAudio}
-                    className="absolute top-3 right-3 p-2 bg-gray-200/80 rounded-full hover:bg-gray-300/80 transition-colors flex items-center justify-center"
+                    className="absolute top-3 right-3 p-2 bg-gray-200/80 rounded-full flex items-center justify-center active:scale-95 transition-transform"
                     title="最初から再生"
                   >
                     <Image
@@ -417,7 +419,7 @@ export default function Page() {
                   <div className="flex justify-center">
                     <button
                       onClick={toggleAudio}
-                      className="p-4 bg-gray-200/80 rounded-full hover:bg-gray-300/80 transition-colors flex items-center justify-center shadow-lg"
+                      className="p-4 bg-gray-200/80 rounded-full active:scale-95 transition-transform flex items-center justify-center shadow-lg"
                       title={isPlaying ? "一時停止" : "再生"}
                     >
                       {isPlaying ? (
@@ -582,7 +584,7 @@ export default function Page() {
             </button> */}
             <Link
               href="/controller/"
-              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold"
+              className="px-8 py-3 bg-theme-yellow text-black rounded-full font-semibold active:scale-95 transition-transform"
             >
               コントローラーに戻る
             </Link>
@@ -599,7 +601,6 @@ export default function Page() {
       <Header />
       <div className="w-full h-16 flex items-center justify-between px-8 py-4">
         <BackBtn />
-        {/* <MuteBtn /> */}
       </div>
       <main className="flex flex-col items-center justify-center w-full flex-1 px-8 text-center">
         <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
