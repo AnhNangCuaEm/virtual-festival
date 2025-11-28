@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
 
     let imageBuffer: Buffer | null = null;
     
-    // Cách 1: Nếu có URL (trường hợp thường)
+    // Method 1: If URL is provided
     const generatedImageUrl = editResponse.data?.[0]?.url;
-    
-    // Cách 2: Nếu có b64_json (trường hợp streaming hoặc response format khác)
+
+    // Method 2: If b64_json is present (for streaming or other response formats  )
     const b64Json = editResponse.data?.[0]?.b64_json;
 
     if (generatedImageUrl) {
@@ -182,8 +182,8 @@ export async function POST(request: NextRequest) {
     
     let errorMessage = 'Failed to generate image';
     let statusCode = 500;
-    
-    // Kiểm tra nếu là OpenAI API error
+
+    // Check if it's an OpenAI API error
     if (error && typeof error === 'object') {
       const errorObj = error as Record<string, unknown>;
       console.error('[KIMONO] Error object:', JSON.stringify(errorObj, null, 2));

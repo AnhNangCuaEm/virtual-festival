@@ -36,10 +36,25 @@ export default function DashboardPage() {
     Array<{ name: string; points: number }>
   >([]);
 
-  const galleryImages = Array.from(
-    { length: 8 },
-    (_, i) => `/images/zone_1/${i + 1}.jpg`
-  );
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+  // Fetch gallery images
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const response = await fetch("/api/gallery-images");
+        const data = await response.json();
+        setGalleryImages(data.images || []);
+      } catch (error) {
+        console.error("❌ Error fetching gallery images:", error);
+      }
+    };
+
+    fetchImages();
+    // Refresh every 60 seconds to pick up new images
+    const interval = setInterval(fetchImages, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Fetch scores from API
@@ -95,8 +110,8 @@ export default function DashboardPage() {
     // Fetch immediately
     fetchScores();
 
-    // Then fetch every 3 seconds
-    const interval = setInterval(fetchScores, 3000);
+    // Then fetch every 20 seconds
+    const interval = setInterval(fetchScores, 20000);
 
     return () => clearInterval(interval);
   }, []);
@@ -105,11 +120,11 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="min-h-screen p-6 bg-cover bg-center bg-no-repeat"
+      className="flex flex-col min-h-screen p-6 bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url(/background/db_background.jpg)" }}
     >
-      {/* Top Section: 5 Ranking Tables */}
-      <div className="min-h-[40vh] grid grid-cols-5 gap-4 mb-8">
+      {/* Top Section: 4 Ranking Tables */}
+      <div className="h-110 grid grid-cols-5 gap-4 mb-8">
         {gameRankings.map((game, idx) => (
           <div
             key={idx}
@@ -117,7 +132,7 @@ export default function DashboardPage() {
             style={{ borderColor: "#B3A0FF", backgroundColor: "#242833" }}
           >
             <div
-              className="text-center font-bold text-black text-sm py-3 px-4 m-0"
+              className="text-center font-bold text-black text-xl py-3 px-4 m-0"
               style={{
                 backgroundColor: "#B3A0FF",
                 borderTopLeftRadius: "14px",
@@ -147,13 +162,13 @@ export default function DashboardPage() {
                 <tbody className="min-h-[200px]">
                   {game.players.slice(0, 3).map((p, i) => (
                     <tr key={i}>
-                      <td className="px-3 pt-2 pb-2 text-center text-white text-sm">
+                      <td className="px-3 pt-2 pb-2 text-center text-white text-xl font-semibold">
                         {i + 1}
                       </td>
-                      <td className="px-3 pt-2 pb-2 text-white text-sm">
+                      <td className="px-3 pt-2 pb-2 text-center text-white text-xl font-semibold">
                         {p.name}
                       </td>
-                      <td className="px-3 pt-2 pb-2 text-center text-white text-sm">
+                      <td className="px-3 pt-2 pb-2 text-center text-white text-xl font-semibold">
                         {p.points}
                       </td>
                     </tr>
@@ -170,37 +185,29 @@ export default function DashboardPage() {
         ))}
       </div>
       {/* Bottom Section: Gallery + Total Ranking */}
-      <div className="grid grid-cols-11 gap-6">
+      <div className="flex-1 grid grid-cols-11 gap-6">
         {/* Gallery Section */}
         <div
           className="col-span-8 rounded-2xl p-1 shadow-lg"
           style={{ backgroundColor: "#B3A0FF" }}
         >
           <div
-            className="rounded-xl p-8"
+            className="rounded-xl p-4 h-full flex items-center justify-center"
             style={{ backgroundColor: "#242833" }}
           >
-            {/* Gallery Grid with Infinite Scroll - 2 rows */}
-            <div className="space-y-4">
+            {/* Gallery Grid with Infinite Scroll */}
+            {galleryImages.length > 0 ? (
               <InfiniteGallery
                 images={galleryImages}
                 direction="left"
-                speed="normal"
-                pauseOnHover={true}
+                speed={70}
                 stagger={true}
-                staggerAmount={8}
-                className="w-full"
+                staggerAmount={64}
+                className="w-full h-full"
               />
-              <InfiniteGallery
-                images={galleryImages}
-                direction="left"
-                speed="normal"
-                pauseOnHover={true}
-                stagger={true}
-                staggerAmount={10}
-                className="w-full"
-              />
-            </div>
+            ) : (
+              <p className="text-white/50">Loading gallery...</p>
+            )}
           </div>
         </div>
         {/* Total Ranking Section - 1.5x wider than game tables */}
@@ -209,7 +216,7 @@ export default function DashboardPage() {
           style={{ borderColor: "#B3A0FF", backgroundColor: "#242833" }}
         >
           <div
-            className="text-center font-bold text-black text-base py-3 px-4 m-0"
+            className="text-center font-bold text-black text-xl py-3 px-4 m-0"
             style={{
               backgroundColor: "#B3A0FF",
               borderTopLeftRadius: "14px",
@@ -239,13 +246,13 @@ export default function DashboardPage() {
               <tbody>
                 {totalRanking.map((player, index) => (
                   <tr key={index} className="border-b border-white/20">
-                    <td className="px-3 py-4 text-center text-white text-sm">
+                    <td className="px-3 py-4 text-center text-white text-xl font-semibold">
                       {index + 1}
                     </td>
-                    <td className="px-3 py-4 text-center text-white text-sm">
+                    <td className="px-3 py-4 text-center text-white text-xl font-semibold">
                       {player.name}
                     </td>
-                    <td className="px-3 py-4 text-center text-white text-sm">
+                    <td className="px-3 py-4 text-center text-white text-xl font-semibold">
                       {player.points}
                     </td>
                   </tr>

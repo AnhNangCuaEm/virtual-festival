@@ -21,6 +21,7 @@ interface PlayerSprite {
 }
 
 export const VenueMap = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const sceneRef = useRef<Phaser.Scene | null>(null);
@@ -97,7 +98,18 @@ export const VenueMap = () => {
     }, [createPlayerSprite]);
 
     useEffect(() => {
-        if (gameRef.current) return;
+        const container = containerRef.current;
+        if (!container) return;
+        
+        // Prevent double initialization - check if canvas already exists
+        if (container.querySelector('canvas') || gameRef.current) {
+            return;
+        }
+
+        // Store reference for cleanup
+        const players = playersRef.current;
+        let handleResize: (() => void) | null = null;
+        let isMounted = true;
 
         // Initialize socket connection
         const getServerUrl = () => {
@@ -130,6 +142,9 @@ export const VenueMap = () => {
 
         // Dynamic import Phaser
         import('phaser').then((PhaserModule) => {
+            // Check again in case component unmounted during async import
+            if (!isMounted || !container) return;
+            
             const Phaser = PhaserModule.default;
 
             class VenueScene extends Phaser.Scene {
@@ -190,7 +205,7 @@ export const VenueMap = () => {
 
             const config: Phaser.Types.Core.GameConfig = {
                 type: Phaser.AUTO,
-                parent: 'venue-game-container',
+                parent: container,
                 width: typeof window !== 'undefined' ? window.innerWidth : 800,
                 height: typeof window !== 'undefined' ? window.innerHeight : 600,
                 render: {
@@ -209,25 +224,24 @@ export const VenueMap = () => {
             gameRef.current = new Phaser.Game(config);
 
             // Handle window resize
-            const handleResize = () => {
+            handleResize = () => {
                 if (gameRef.current) {
                     gameRef.current.scale.resize(window.innerWidth, window.innerHeight);
                 }
             };
 
             window.addEventListener('resize', handleResize);
-
-            return () => {
-                window.removeEventListener('resize', handleResize);
-                if (gameRef.current) {
-                    gameRef.current.destroy(true);
-                    gameRef.current = null;
-                }
-            };
+        }).catch((error) => {
+            console.error('Failed to load Phaser:', error);
         });
 
         // Cleanup
         return () => {
+            isMounted = false;
+            
+            if (handleResize) {
+                window.removeEventListener('resize', handleResize);
+            }
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
@@ -236,8 +250,11 @@ export const VenueMap = () => {
                 gameRef.current.destroy(true);
                 gameRef.current = null;
             }
+            // Clear players
+            players.clear();
+            sceneRef.current = null;
         };
     }, [updatePlayers]);
 
-    return <div id="venue-game-container" style={{ width: '100%', height: '100vh' }} />;
+    return <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />;
 };
