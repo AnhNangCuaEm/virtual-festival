@@ -239,13 +239,13 @@ export default function DashboardPage() {
               <tbody>
                 {totalRanking.map((player, index) => (
                   <tr key={index} className="border-b border-white/20">
-                    <td className="px-3 py-4 text-center font-bold text-white text-2xl">
+                    <td className="px-3 py-4 text-center text-white text-sm">
                       {index + 1}
                     </td>
-                    <td className="px-3 py-4 text-center text-white text-xl">
+                    <td className="px-3 py-4 text-center text-white text-sm">
                       {player.name}
                     </td>
-                    <td className="px-3 py-4 text-center font-bold text-white text-2xl">
+                    <td className="px-3 py-4 text-center text-white text-sm">
                       {player.points}
                     </td>
                   </tr>
